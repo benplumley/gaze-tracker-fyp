@@ -1,7 +1,9 @@
 #include "sdk/NPClientWraps.cpp"
 #include <iostream>
 
-const LPTSTR dllPath = "C:\Program Files (x86)\NaturalPoint\TrackIR5";
+using namespace std;
+
+const LPTSTR dllPath = "C:\\Program Files (x86)\\NaturalPoint\\TrackIR5";
 
 class DataCollector {
 	DataCollector() { // default constructor, initialise here
@@ -12,4 +14,4 @@ class DataCollector {
 			cout << "TrackIR init failed" << "\n";
 		}
 	}
-}
+};
