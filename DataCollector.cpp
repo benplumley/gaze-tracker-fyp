@@ -4,14 +4,18 @@
 
 #include <iostream>
 #include <string>
+// #include <CWnd>
 
 using namespace std;
 
 const LPTSTR dllPath = "C:\\Program Files (x86)\\NaturalPoint\\TrackIR5";
+unsigned long NPFrameSignature;
+unsigned long NPStaleFrames;
 
 class DataCollector {
 	public:
 		DataCollector();
+		NPRESULT client_HandleTrackIRData();
 	private:
 		void DisplayLine(CString);
 		void TrackIR_Enhanced_Init();
@@ -52,8 +56,8 @@ void DataCollector::TrackIR_Enhanced_Init() {
     NPRESULT result;
 
     // Zero TrackIR SDK Related counters
-	unsigned long NPFrameSignature = 0;
-	unsigned long NPStaleFrames = 0;
+	NPFrameSignature = 0;
+	NPStaleFrames = 0;
 
     // Initialize the the TrackIR Enhanced DLL
 	result = NPClient_Init( dllPath );
@@ -64,11 +68,13 @@ void DataCollector::TrackIR_Enhanced_Init() {
 
 
     // Register your applications Window Handle
-	// result = NP_RegisterWindowHandle( GetSafeHwnd() );
-	// if( NP_OK == result )
-	// 	DisplayLine( "NPClient : Window handle registration successful." );
-	// else
-	// 	DisplayLine( "NPClient : Error registering window handle!!" );
+	HWND handle;
+	handle=FindWindowA(NULL, "Windows PowerShell"); // TODO name the window something a bit more unique
+	result = NP_RegisterWindowHandle( handle );
+	if( NP_OK == result )
+		DisplayLine( "NPClient : Window handle registration successful." );
+	else
+		DisplayLine( "NPClient : Error registering window handle!!" );
 
 
 	// Query for the NaturalPoint TrackIR software version
@@ -101,24 +107,9 @@ void DataCollector::TrackIR_Enhanced_Init() {
 
     // Register the Axes selection with the TrackIR Enhanced interface
 	NP_RequestData(DataFields);
-
-
-    // It is *required* that your application registers the Developer ID
-    // assigned by NaturalPoint!
-
-    // Your assigned developer ID needs to be inserted below!
     #define NP_DEVELOPER_ID 20135
-
-    // NOTE : The title of your project must show up
-    // in the list of supported titles shown in the Profiles
-    // tab of the TrackIR software, if it does not then the
-    // TrackIR software will *not* transmit data to your
-    // application. If your title is not present in the list,
-    // you may need to have the TrackIR software perform a
-    // game list update (to download support for new Developer IDs)
-    // using the menu item under the "Help" or "Update" menu.
-
     NP_RegisterProgramProfileID(NP_DEVELOPER_ID);
+    // NP_RegisterProgramProfileID(20135);
 
 
     // Stop the cursor
@@ -136,4 +127,87 @@ void DataCollector::TrackIR_Enhanced_Init() {
 	else
 		DisplayLine("NPClient : Error starting data transmission");
 
+
+	// Start the cursor
+	result = NP_StartCursor();
+	if (result == NP_OK)
+		DisplayLine("Cursor started");
+	else
+		DisplayLine("NPClient : Error starting cursor");
+}
+
+NPRESULT DataCollector::client_HandleTrackIRData()
+{
+	TRACKIRDATA tid;
+    CString csDataRxMsg;
+	CString t_str;
+
+    // Query the TrackIR Enhanced Interface for the latest data
+	NPRESULT result = NP_GetData( &tid );
+
+    // If the call succeeded, then we have data to process
+	if( NP_OK == result )
+	{
+        // Make sure the remote interface is active
+		if (tid.wNPStatus == NPSTATUS_REMOTEACTIVE)
+		{
+            // Compare the last frame signature to the current one if
+            // they are not the same then the data is new
+			if (true)
+			// if (NPFrameSignature != tid.wPFrameSignature)
+			{
+
+                // In your own application, this is where you would utilize
+                // the Tracking Data for View Control / etc.
+
+				// Display the Tracking Data
+				t_str.Format( "Rotation : NPPitch = %04.02f, NPYaw = %04.02f, NPRoll = %04.02f \r\nTranslation : NPX = %04.02f, NPY = %04.02f, NPZ = %04.02f \r\nInformation NPStatus = %d, Frame = %d",
+                               tid.fNPPitch,
+                               tid.fNPYaw,
+                               tid.fNPRoll,
+                               tid.fNPX,
+                               tid.fNPY,
+                               tid.fNPZ,
+                               tid.wNPStatus,
+                               tid.wPFrameSignature );
+				DisplayLine(t_str);
+				NPFrameSignature = tid.wPFrameSignature;
+				NPStaleFrames = 0;
+
+				//
+				// All other data fields in TRACKIRDATA can be handled in a similar way.
+				//
+			}
+			else
+			{
+				// Either there is no tracking data, the user has
+				// paused the trackIR, or the call happened before
+				// the TrackIR was able to update the interface
+				// with new data
+
+				if (NPStaleFrames > 30)
+				{
+					t_str.Format("No New Data. Paused or Not Tracking?", NPStaleFrames);
+				}
+				else
+				{
+                    NPStaleFrames++;
+					t_str.Format("No New Data for %d frames", NPStaleFrames);
+				}
+				DisplayLine(t_str);
+				result = NP_ERR_NO_DATA;
+			}
+		}
+		else
+		{
+			// The user has set the device out of trackIR Enhanced Mode
+			// and into Mouse Emulation mode with the hotkey
+			t_str.Format("User Disabled");
+			DisplayLine(t_str);
+			result = NP_ERR_NO_DATA;
+		}
+
+	}
+
+	return result;
 }
