@@ -15,32 +15,31 @@ unsigned long NPStaleFrames;
 class DataCollector {
 	public:
 		DataCollector();
+		~DataCollector();
 		NPRESULT client_HandleTrackIRData();
 	private:
 		void DisplayLine(CString);
 		void TrackIR_Enhanced_Init();
+		void TrackIR_Enhanced_Shutdown();
 };
 
 DataCollector::DataCollector(void) { // default constructor, initialise here
-	// NPRESULT result = NPClient_Init(dllPath);
-	// if (result == NP_OK) {
-	// 	cout << "TrackIR init success" << "\n";
-	// } else {
-	// 	cout << "TrackIR init failed" << "\n";
-	// 	if (result == NP_ERR_DLL_NOT_FOUND) {
-	// 		cout << "NP_ERR_DLL_NOT_FOUND" << "\n";
-	// 		cout << "Is the TrackIR software running?" << "\n";
-	// 	}
-	// 	return;
-	// }
-	// result = NP_StartCursor();
-	// if (result == NP_OK) {
-	// 	cout << "Started TrackIR cursor" << "\n";
-	// } else {
-	// 	cout << "TrackIR cursor start failed" << "\n";
-	// 	return;
-	// }
 	TrackIR_Enhanced_Init();
+}
+
+DataCollector::~DataCollector(void) { // default destructor
+	TrackIR_Enhanced_Shutdown();
+}
+
+void DataCollector::TrackIR_Enhanced_Shutdown( )
+{
+
+    // Request that the TrackIR software stop sending Tracking Data
+    NP_StopDataTransmission();
+
+
+    // Un-register your applications Windows Handle
+    NP_UnregisterWindowHandle();
 }
 
 void DataCollector::DisplayLine(CString s) {
