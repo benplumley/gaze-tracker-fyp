@@ -1,10 +1,6 @@
 #include "sdk/NPClientWraps.cpp"
-// #include "sdk/NPTest.h"
-// #include "sdk/NPTestDlg.h"
-
 #include <iostream>
 #include <string>
-// #include <CWnd>
 
 using namespace std;
 
@@ -16,7 +12,7 @@ class DataCollector {
 	public:
 		DataCollector();
 		~DataCollector();
-		NPRESULT client_HandleTrackIRData();
+		TRACKIRDATA client_HandleTrackIRData();
 	private:
 		void DisplayLine(CString);
 		void TrackIR_Enhanced_Init();
@@ -135,7 +131,7 @@ void DataCollector::TrackIR_Enhanced_Init() {
 		DisplayLine("NPClient : Error starting cursor");
 }
 
-NPRESULT DataCollector::client_HandleTrackIRData()
+TRACKIRDATA DataCollector::client_HandleTrackIRData()
 {
 	TRACKIRDATA tid;
     CString csDataRxMsg;
@@ -150,52 +146,7 @@ NPRESULT DataCollector::client_HandleTrackIRData()
         // Make sure the remote interface is active
 		if (tid.wNPStatus == NPSTATUS_REMOTEACTIVE)
 		{
-            // Compare the last frame signature to the current one if
-            // they are not the same then the data is new
-			if (true)
-			// if (NPFrameSignature != tid.wPFrameSignature)
-			{
 
-                // In your own application, this is where you would utilize
-                // the Tracking Data for View Control / etc.
-
-				// Display the Tracking Data
-				t_str.Format( "Rotation : NPPitch = %04.02f, NPYaw = %04.02f, NPRoll = %04.02f \r\nTranslation : NPX = %04.02f, NPY = %04.02f, NPZ = %04.02f \r\nInformation NPStatus = %d, Frame = %d",
-                               tid.fNPPitch,
-                               tid.fNPYaw,
-                               tid.fNPRoll,
-                               tid.fNPX,
-                               tid.fNPY,
-                               tid.fNPZ,
-                               tid.wNPStatus,
-                               tid.wPFrameSignature );
-				DisplayLine(t_str);
-				NPFrameSignature = tid.wPFrameSignature;
-				NPStaleFrames = 0;
-
-				//
-				// All other data fields in TRACKIRDATA can be handled in a similar way.
-				//
-			}
-			else
-			{
-				// Either there is no tracking data, the user has
-				// paused the trackIR, or the call happened before
-				// the TrackIR was able to update the interface
-				// with new data
-
-				if (NPStaleFrames > 30)
-				{
-					t_str.Format("No New Data. Paused or Not Tracking?", NPStaleFrames);
-				}
-				else
-				{
-                    NPStaleFrames++;
-					t_str.Format("No New Data for %d frames", NPStaleFrames);
-				}
-				DisplayLine(t_str);
-				result = NP_ERR_NO_DATA;
-			}
 		}
 		else
 		{
@@ -208,5 +159,5 @@ NPRESULT DataCollector::client_HandleTrackIRData()
 
 	}
 
-	return result;
+	return tid;
 }

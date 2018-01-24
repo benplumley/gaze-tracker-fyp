@@ -4,8 +4,11 @@
 #include <conio.h>
 #include <iostream>
 #include <atomic>
+#include <mutex>
 
 std::atomic_bool ending = false;
+std::mutex tid_mutex;
+TRACKIRDATA tid_global;
 
 class GazeTracker {
 	private:
@@ -13,17 +16,16 @@ class GazeTracker {
 		void control_loop();
 };
 
-void poll_loop() {
-	DataCollector dc;
-	TRACKIRDATA tid;
+void poll_loop(DataCollector dc) {
+	TRACKIRDATA tid_temp = tid_global;
 	NPRESULT result;
 	while (!ending) {
-		result = dc.client_HandleTrackIRData();
-		// std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-		if (result != NP_OK) {
-			// std::cout << "Got trackIR data" << '\n';
-			ending = true;
-		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(1)); // loops faster than polling rate, wasting CPU
+		tid_temp = dc.client_HandleTrackIRData();
+		{
+			std::lock_guard<std::mutex> lock(tid_mutex); // lock tid to write it
+			tid_global = tid_temp;
+		} // tid_mutex is unlocked when it passes out of this scope
 	}
 }
 
@@ -37,12 +39,56 @@ void control_loop() {
 	}
 }
 
+void process_loop() {
+	TRACKIRDATA tid;
+	CString t_str;
+	unsigned long NPFrameSignature = 0;
+	unsigned long NPStaleFrames = 0;
+	while (!ending) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(1)); // loops faster than polling rate, wasting CPU
+		{
+			std::lock_guard<std::mutex> lock(tid_mutex); // lock tid to read it
+			tid = tid_global;
+		} // tid_mutex is unlocked when it passes out of this scope
+
+        // Compare the last frame signature to the current one if
+        // they are not the same then the data is new
+		if (NPFrameSignature != tid.wPFrameSignature) {
+			t_str.Format("[%d] translation (%04.02f, %04.02f, %04.02f); rotation (%04.02f, %04.02f, %04.02f)",
+						  tid.wPFrameSignature,
+						  tid.fNPX,
+						  tid.fNPY,
+						  tid.fNPZ,
+						  tid.fNPPitch,
+						  tid.fNPYaw,
+						  tid.fNPRoll
+					  	);
+			std::cout << t_str << '\n';
+			NPFrameSignature = tid.wPFrameSignature;
+			NPStaleFrames = 0;
+
+		} else {
+			// Either there is no tracking data, the user has paused the
+			// trackIR, or the call happened before the TrackIR was able to
+			// update the interface with new data
+			if (NPStaleFrames == 30) {
+				std::cout << "No target." << '\n';
+			}
+            NPStaleFrames++;
+		}
+	}
+}
+
 int main(int argc, char const *argv[]) {
+	DataCollector dc;
 	std::thread poll;
-	poll = std::thread(poll_loop);
+	poll = std::thread(poll_loop, dc);
 	std::thread control;
 	control = std::thread(control_loop);
-	// both threads run until Escape pressed
+	std::thread process;
+	process = std::thread(process_loop);
+	// threads run until Escape pressed
 	poll.join();
 	control.join();
+	process.join();
 }
