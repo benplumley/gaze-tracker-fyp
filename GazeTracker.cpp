@@ -54,14 +54,14 @@ void process_loop() {
         // Compare the last frame signature to the current one if
         // they are not the same then the data is new
 		if (NPFrameSignature != tid.wPFrameSignature) {
-			t_str.Format("[%d] translation (%04.02f, %04.02f, %04.02f); rotation (%04.02f, %04.02f, %04.02f)",
+			t_str.Format("[%d] translation cm (%04.02f, %04.02f, %04.02f); rotation deg (%04.02f, %04.02f, %04.02f)",
 						  tid.wPFrameSignature,
-						  tid.fNPX,
-						  tid.fNPY,
-						  tid.fNPZ,
-						  tid.fNPPitch,
-						  tid.fNPYaw,
-						  tid.fNPRoll
+						  tid.fNPX / 204.7875f,
+						  tid.fNPY / 204.7875f,
+						  tid.fNPZ / 204.7875f,
+						  tid.fNPPitch / 91.016667f,
+						  tid.fNPYaw / 91.016667f,
+						  tid.fNPRoll / 91.016667f
 					  	);
 			std::cout << t_str << '\n';
 			NPFrameSignature = tid.wPFrameSignature;
