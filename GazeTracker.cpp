@@ -1,4 +1,5 @@
 #include "DataCollector.cpp"
+#include "EyeInterface.cpp"
 #include <chrono>
 #include <thread>
 #include <conio.h>
@@ -9,6 +10,7 @@
 std::atomic_bool ending = false;
 std::mutex tid_mutex;
 TRACKIRDATA tid_global;
+EyeInterface::EYELIKEDATA ei_global;
 
 class GazeTracker {
 	private:
@@ -16,7 +18,7 @@ class GazeTracker {
 		void control_loop();
 };
 
-void poll_loop(DataCollector dc) {
+void poll_loop(DataCollector dc, EyeInterface ei) {
 	TRACKIRDATA tid_temp = tid_global;
 	NPRESULT result;
 	while (!ending) {
@@ -26,6 +28,7 @@ void poll_loop(DataCollector dc) {
 			std::lock_guard<std::mutex> lock(tid_mutex); // lock tid to write it
 			tid_global = tid_temp;
 		} // tid_mutex is unlocked when it passes out of this scope
+		// ei_global = ei.getData(); // TODO causes error
 	}
 }
 
@@ -81,8 +84,9 @@ void process_loop() {
 
 int main(int argc, char const *argv[]) {
 	DataCollector dc;
+	EyeInterface ei;
 	std::thread poll;
-	poll = std::thread(poll_loop, dc);
+	poll = std::thread(poll_loop, dc, ei);
 	std::thread control;
 	control = std::thread(control_loop);
 	std::thread process;

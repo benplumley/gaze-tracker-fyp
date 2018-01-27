@@ -1,6 +1,11 @@
-#include <E:\Program Files\opencv\2.4.13.4\build\include\opencv2/objdetect/objdetect.hpp>
-#include <E:\Program Files\opencv\2.4.13.4\build\include\opencv2/highgui/highgui.hpp>
-#include <E:\Program Files\opencv\2.4.13.4\build\include\opencv2/imgproc/imgproc.hpp>
+// #include <E:\Program Files\opencv\2.4.13.4\build\include\opencv2/objdetect/objdetect.hpp>
+// #include <E:\Program Files\opencv\2.4.13.4\build\include\opencv2/highgui/highgui.hpp>
+// #include <E:\Program Files\opencv\2.4.13.4\build\include\opencv2/imgproc/imgproc.hpp>
+// #include <objdetect.hpp>
+#include "objdetect.hpp"
+#include "highgui.hpp"
+#include "imgproc.hpp"
+#include "..\\EyeInterface.cpp"
 
 #include <iostream>
 #include <queue>
@@ -11,6 +16,7 @@
 #include "findEyeCenter.h"
 #include "findEyeCorner.h"
 #include <time.h>
+#include <windows.h>
 
 using namespace cv;
 
@@ -29,6 +35,7 @@ std::string face_window_name = "Capture - Face";
 cv::RNG rng(12345);
 cv::Mat debugImage;
 cv::Mat skinCrCbHist = cv::Mat::zeros(cv::Size(256, 256), CV_8UC1);
+LPTSTR SlotName = TEXT("\\\\.\\mailslot\\gazetrack_eyelike_mailslot");
 
 // Timing code
 double _avgdur = 0;
@@ -59,6 +66,70 @@ double avgfps()
 	_fps1sec++;
 	return _avgfps;
 }
+
+BOOL WriteSlot(HANDLE hSlot, LPTSTR lpszMessage) {
+   BOOL fResult;
+   DWORD cbWritten;
+
+   fResult = WriteFile(hSlot,
+     lpszMessage,
+     (DWORD) (lstrlen(lpszMessage)+1)*sizeof(TCHAR),
+     &cbWritten,
+     (LPOVERLAPPED) NULL);
+
+   if (!fResult)
+   {
+      printf("WriteFile failed with %d.\n", GetLastError());
+      return FALSE;
+   }
+
+   printf("Slot written to successfully.\n");
+
+   return TRUE;
+}
+
+void sendEyeData(int face_width, int right_eye_x, int right_eye_y, int left_eye_x, int left_eye_y) {
+	HANDLE hFile;
+
+	hFile = CreateFile(SlotName,
+			GENERIC_WRITE,
+			FILE_SHARE_READ,
+			(LPSECURITY_ATTRIBUTES) NULL,
+			OPEN_EXISTING,
+			FILE_ATTRIBUTE_NORMAL,
+			(HANDLE) NULL);
+
+	if (hFile == INVALID_HANDLE_VALUE) {
+		printf("CreateFile failed with %d.\n", GetLastError());
+	}
+
+	WriteSlot(hFile, TEXT("%d %d %d %d %d",
+						  face_width,
+						  right_eye_x,
+						  right_eye_y,
+						  left_eye_x,
+					  	  left_eye_y));
+
+	CloseHandle(hFile);
+}
+
+
+// // EyeInterface::EYELIKEDATA __declspec(dllexport) __stdcall eyelikeGetData() {
+// EyeInterface::EYELIKEDATA eyelikeGetData() {
+// 	EYELIKEDATA ei;
+// 	// TODO call findEyes etc (everything in main except window stuff), edit them to return face/pupil data
+// 	ei.face_width = 100;
+// 	ei.right_eye.x = 20;
+// 	ei.right_eye.y = 50;
+// 	ei.left_eye.x = 80;
+// 	ei.left_eye.y = 50;
+// 	// ei.face_width = face.width;
+// 	// ei.right_eye.x = rightPupil.x;
+// 	// ei.right_eye.y = rightPupil.y;
+// 	// ei.left_eye.x = leftPupil.x;
+// 	// ei.left_eye.y = leftPupil.y;
+// 	return ei;
+// }
 
 /**
  * @function main
@@ -207,7 +278,7 @@ void findEyes(cv::Mat frame_gray, cv::Rect face) {
     circle(faceROI, rightLeftCorner, 3, 200);
     circle(faceROI, rightRightCorner, 3, 200);
   }
-
+  sendEyeData(face.width, rightPupil.x, rightPupil.y, leftPupil.x, leftPupil.y);
   imshow(face_window_name, faceROI);
 //  cv::Rect roi( cv::Point( 0, 0 ), faceROI.size());
 //  cv::Mat destinationROI = debugImage( roi );
