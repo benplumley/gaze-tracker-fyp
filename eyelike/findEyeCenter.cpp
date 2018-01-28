@@ -31,12 +31,12 @@ void plotVecField(const cv::Mat &gradientX, const cv::Mat &gradientY, const cv::
   mglData *xData = matToData<double>(gradientX);
   mglData *yData = matToData<double>(gradientY);
   mglData *imgData = matToData<float>(img);
-  
+
   mglGraph gr(0,gradientX.cols * 20, gradientY.rows * 20);
   gr.Vect(*xData, *yData);
   gr.Mesh(*imgData);
   gr.WriteFrame("vecField.png");
-  
+
   delete xData;
   delete yData;
   delete imgData;
@@ -57,18 +57,18 @@ void scaleToFastSize(const cv::Mat &src,cv::Mat &dst) {
 
 cv::Mat computeMatXGradient(const cv::Mat &mat) {
   cv::Mat out(mat.rows,mat.cols,CV_64F);
-  
+
   for (int y = 0; y < mat.rows; ++y) {
     const uchar *Mr = mat.ptr<uchar>(y);
     double *Or = out.ptr<double>(y);
-    
+
     Or[0] = Mr[1] - Mr[0];
     for (int x = 1; x < mat.cols - 1; ++x) {
       Or[x] = (Mr[x+1] - Mr[x-1])/2.0;
     }
     Or[mat.cols-1] = Mr[mat.cols-1] - Mr[mat.cols-2];
   }
-  
+
   return out;
 }
 
@@ -134,7 +134,7 @@ cv::Point findEyeCenter(cv::Mat face, cv::Rect eye, std::string debugWindow) {
       }
     }
   }
-  imshow(debugWindow,gradientX);
+  // imshow(debugWindow,gradientX);
   //-- Create a blurred and inverted image for weighting
   cv::Mat weight;
   GaussianBlur( eyeROI, weight, cv::Size( kWeightBlurSize, kWeightBlurSize ), 0, 0 );
@@ -199,7 +199,7 @@ bool floodShouldPushPoint(const cv::Point &np, const cv::Mat &mat) {
 // returns a mask
 cv::Mat floodKillEdges(cv::Mat &mat) {
   rectangle(mat,cv::Rect(0,0,mat.cols,mat.rows),255);
-  
+
   cv::Mat mask(mat.rows, mat.cols, CV_8U, 255);
   std::queue<cv::Point> toDo;
   toDo.push(cv::Point(0,0));

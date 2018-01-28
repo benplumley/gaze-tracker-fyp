@@ -71,7 +71,7 @@ EyeInterface::EyeInterface(void) {
 
 // read all the messages in the mailslot to get the most recent
 EyeInterface::EYELIKEDATA EyeInterface::getData() {
-	std::string message;
+	std::string message = message_global;
 	EYELIKEDATA data;
 	while (ReadSlot() == TRUE) {
 		message = message_global;
@@ -122,11 +122,11 @@ BOOL ReadSlot() {
     {
         // Create a message-number string.
 
-        StringCchPrintf((LPTSTR) achID,
-            80,
-            TEXT("\nMessage #%d of %d\n"),
-            cAllMessages - cMessage + 1,
-            cAllMessages);
+        // StringCchPrintf((LPTSTR) achID,
+        //     80,
+        //     TEXT("\nMessage #%d of %d\n"),
+        //     cAllMessages - cMessage + 1,
+        //     cAllMessages);
 
         // Allocate memory for the message.
 
@@ -157,7 +157,7 @@ BOOL ReadSlot() {
 
         // Display the message.
 
-        _tprintf(TEXT("Contents of the mailslot: %s\n"), lpszBuffer);
+        // _tprintf(TEXT("Contents of the mailslot: %s\n"), lpszBuffer);
 		message_global = lpszBuffer;
         GlobalFree((HGLOBAL) lpszBuffer);
 

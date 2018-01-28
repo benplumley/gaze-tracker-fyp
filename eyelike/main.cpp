@@ -150,14 +150,14 @@ int main( int argc, const char** argv ) {
   cv::moveWindow(main_window_name, 400, 100);
   cv::namedWindow(face_window_name,CV_WINDOW_NORMAL);
   cv::moveWindow(face_window_name, 10, 100);
-  cv::namedWindow("Right Eye",CV_WINDOW_NORMAL);
-  cv::moveWindow("Right Eye", 10, 600);
-  cv::namedWindow("Left Eye",CV_WINDOW_NORMAL);
-  cv::moveWindow("Left Eye", 10, 800);
-  cv::namedWindow("aa",CV_WINDOW_NORMAL);
-  cv::moveWindow("aa", 10, 800);
-  cv::namedWindow("aaa",CV_WINDOW_NORMAL);
-  cv::moveWindow("aaa", 10, 800);
+  // cv::namedWindow("Right Eye",CV_WINDOW_NORMAL);
+  // cv::moveWindow("Right Eye", 10, 600);
+  // cv::namedWindow("Left Eye",CV_WINDOW_NORMAL);
+  // cv::moveWindow("Left Eye", 10, 800);
+  // cv::namedWindow("aa",CV_WINDOW_NORMAL);
+  // cv::moveWindow("aa", 10, 800);
+  // cv::namedWindow("aaa",CV_WINDOW_NORMAL);
+  // cv::moveWindow("aaa", 10, 800);
 
   createCornerKernels();
   ellipse(skinCrCbHist, cv::Point(113, 155.6), cv::Size(23.4, 15.2),

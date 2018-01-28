@@ -28,7 +28,7 @@ void poll_loop(DataCollector dc, EyeInterface ei) {
 			std::lock_guard<std::mutex> lock(tid_mutex); // lock tid to write it
 			tid_global = tid_temp;
 		} // tid_mutex is unlocked when it passes out of this scope
-		ei_global = ei.getData();
+		ei_global = ei.getData(); // non-blocking, returns the most recent value
 	}
 }
 
@@ -45,6 +45,7 @@ void control_loop() {
 void process_loop() {
 	TRACKIRDATA tid;
 	CString t_str;
+	CString e_str;
 	unsigned long NPFrameSignature = 0;
 	unsigned long NPStaleFrames = 0;
 	while (!ending) {
@@ -70,6 +71,13 @@ void process_loop() {
 			NPFrameSignature = tid.wPFrameSignature;
 			NPStaleFrames = 0;
 
+			e_str.Format("width %d; left (%d, %d); right (%d, %d)",
+						  ei_global.face_width,
+						  ei_global.left_eye.x,
+						  ei_global.left_eye.y,
+						  ei_global.right_eye.x,
+						  ei_global.right_eye.y);
+  		    std::cout << e_str << '\n';
 		} else {
 			// Either there is no tracking data, the user has paused the
 			// trackIR, or the call happened before the TrackIR was able to
