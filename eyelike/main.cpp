@@ -8,6 +8,7 @@
 #include "..\\EyeInterface.cpp"
 
 #include <iostream>
+#include <string>
 #include <queue>
 #include <stdio.h>
 #include <math.h>
@@ -102,13 +103,18 @@ void sendEyeData(int face_width, int right_eye_x, int right_eye_y, int left_eye_
 	if (hFile == INVALID_HANDLE_VALUE) {
 		printf("CreateFile failed with %d.\n", GetLastError());
 	}
-
-	WriteSlot(hFile, TEXT("%d %d %d %d %d",
-						  face_width,
-						  right_eye_x,
-						  right_eye_y,
-						  left_eye_x,
-					  	  left_eye_y));
+	std::string datastring = "";
+	datastring += std::to_string(face_width);
+	datastring += " ";
+	datastring += std::to_string(right_eye_x);
+	datastring += " ";
+	datastring += std::to_string(right_eye_y);
+	datastring += " ";
+	datastring += std::to_string(left_eye_x);
+	datastring += " ";
+	datastring += std::to_string(left_eye_y);
+	LPSTR s = const_cast<char *>(datastring.c_str());
+	WriteSlot(hFile, s);
 
 	CloseHandle(hFile);
 }

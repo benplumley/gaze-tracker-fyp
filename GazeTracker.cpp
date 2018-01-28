@@ -28,7 +28,7 @@ void poll_loop(DataCollector dc, EyeInterface ei) {
 			std::lock_guard<std::mutex> lock(tid_mutex); // lock tid to write it
 			tid_global = tid_temp;
 		} // tid_mutex is unlocked when it passes out of this scope
-		// ei_global = ei.getData(); // TODO causes error
+		ei_global = ei.getData();
 	}
 }
 

@@ -76,12 +76,8 @@ EyeInterface::EYELIKEDATA EyeInterface::getData() {
 	while (ReadSlot() == TRUE) {
 		message = message_global;
 	}
-	// TODO convert string message into EYELIKEDATA to return
-	// if (!r_eyelikeGetData) {
-	// 	std::cout << "Attempted to call remote procedure but not linked to eyelike." << std::endl;
-	// }
-	// EyeInterface::EYELIKEDATA data = r_eyelikeGetData();
-	// return data;
+	const char * c = message.c_str();
+	sscanf(c, "%d %d %d %d %d", &data.face_width, &data.right_eye.x, &data.right_eye.y, &data.left_eye.x, &data.left_eye.y);
 	return data;
 }
 
@@ -117,7 +113,6 @@ BOOL ReadSlot() {
 
     if (cbMessage == MAILSLOT_NO_MESSAGE)
     {
-        printf("Waiting for a message...\n");
         return FALSE;
     }
 
