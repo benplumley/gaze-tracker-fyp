@@ -119,24 +119,6 @@ void sendEyeData(int face_width, int right_eye_x, int right_eye_y, int left_eye_
 	CloseHandle(hFile);
 }
 
-
-// // EyeInterface::EYELIKEDATA __declspec(dllexport) __stdcall eyelikeGetData() {
-// EyeInterface::EYELIKEDATA eyelikeGetData() {
-// 	EYELIKEDATA ei;
-// 	// TODO call findEyes etc (everything in main except window stuff), edit them to return face/pupil data
-// 	ei.face_width = 100;
-// 	ei.right_eye.x = 20;
-// 	ei.right_eye.y = 50;
-// 	ei.left_eye.x = 80;
-// 	ei.left_eye.y = 50;
-// 	// ei.face_width = face.width;
-// 	// ei.right_eye.x = rightPupil.x;
-// 	// ei.right_eye.y = rightPupil.y;
-// 	// ei.left_eye.x = leftPupil.x;
-// 	// ei.left_eye.y = leftPupil.y;
-// 	return ei;
-// }
-
 /**
  * @function main
  */
@@ -150,14 +132,6 @@ int main( int argc, const char** argv ) {
   cv::moveWindow(main_window_name, 400, 100);
   cv::namedWindow(face_window_name,CV_WINDOW_NORMAL);
   cv::moveWindow(face_window_name, 10, 100);
-  // cv::namedWindow("Right Eye",CV_WINDOW_NORMAL);
-  // cv::moveWindow("Right Eye", 10, 600);
-  // cv::namedWindow("Left Eye",CV_WINDOW_NORMAL);
-  // cv::moveWindow("Left Eye", 10, 800);
-  // cv::namedWindow("aa",CV_WINDOW_NORMAL);
-  // cv::moveWindow("aa", 10, 800);
-  // cv::namedWindow("aaa",CV_WINDOW_NORMAL);
-  // cv::moveWindow("aaa", 10, 800);
 
   createCornerKernels();
   ellipse(skinCrCbHist, cv::Point(113, 155.6), cv::Size(23.4, 15.2),
@@ -253,18 +227,23 @@ void findEyes(cv::Mat frame_gray, cv::Rect face) {
   rectangle(debugFace,rightLeftCornerRegion,200);
   rectangle(debugFace,rightRightCornerRegion,200);
 
-  // draw eye centers on camera view
-  circle(debugImage, rightPupil, 3, 1234);
-  circle(debugImage, leftPupil, 3, 1234);
   // change eye centers to face coordinates
   rightPupil.x += rightEyeRegion.x;
   rightPupil.y += rightEyeRegion.y;
   leftPupil.x += leftEyeRegion.x;
   leftPupil.y += leftEyeRegion.y;
-  // draw eye centers
+  // draw eye centers on black and white face view
   circle(debugFace, rightPupil, 3, 1234);
   circle(debugFace, leftPupil, 3, 1234);
 
+
+  rightPupil.x += face.x;
+  rightPupil.y += face.y;
+  leftPupil.x += face.x;
+  leftPupil.y += face.y;
+  // draw eye centers on camera view
+  circle(debugImage, rightPupil, 3, 1234);
+  circle(debugImage, leftPupil, 3, 1234);
   //-- Find Eye Corners
   if (kEnableEyeCorner) {
     cv::Point2f leftRightCorner = findEyeCorner(faceROI(leftRightCornerRegion), true, false);
