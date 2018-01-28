@@ -30,12 +30,12 @@ DataCollector::~DataCollector(void) { // default destructor
 void DataCollector::TrackIR_Enhanced_Shutdown( )
 {
 
-    // Request that the TrackIR software stop sending Tracking Data
-    NP_StopDataTransmission();
+	// Request that the TrackIR software stop sending Tracking Data
+	NP_StopDataTransmission();
 
 
-    // Un-register your applications Windows Handle
-    NP_UnregisterWindowHandle();
+	// Un-register your applications Windows Handle
+	NP_UnregisterWindowHandle();
 }
 
 void DataCollector::DisplayLine(CString s) {
@@ -48,13 +48,13 @@ void DataCollector::DisplayLine(CString s) {
 // ************************************************************
 void DataCollector::TrackIR_Enhanced_Init() {
 
-    NPRESULT result;
+	NPRESULT result;
 
-    // Zero TrackIR SDK Related counters
+	// Zero TrackIR SDK Related counters
 	NPFrameSignature = 0;
 	NPStaleFrames = 0;
 
-    // Initialize the the TrackIR Enhanced DLL
+	// Initialize the the TrackIR Enhanced DLL
 	result = NPClient_Init( dllPath );
 	if( NP_OK == result )
 		DisplayLine( "NPClient interface -- initialize OK." );
@@ -62,7 +62,7 @@ void DataCollector::TrackIR_Enhanced_Init() {
 		DisplayLine( "Error initializing NPClient interface!!" );
 
 
-    // Register your applications Window Handle
+	// Register your applications Window Handle
 	HWND handle;
 	handle=FindWindowA(NULL, "Windows PowerShell"); // TODO name the window something a bit more unique
 	result = NP_RegisterWindowHandle( handle );
@@ -87,27 +87,27 @@ void DataCollector::TrackIR_Enhanced_Init() {
 		DisplayLine( "NPClient : Error querying NaturalPoint software version!!" );
 
 
-    // Choose the Axes that you want tracking data for
+	// Choose the Axes that you want tracking data for
 	unsigned int DataFields = 0;
 
-    // Rotation Axes
+	// Rotation Axes
 	DataFields |= NPPitch;
 	DataFields |= NPYaw;
 	DataFields |= NPRoll;
 
-    // Translation Axes
+	// Translation Axes
 	DataFields |= NPX;
 	DataFields |= NPY;
 	DataFields |= NPZ;
 
-    // Register the Axes selection with the TrackIR Enhanced interface
+	// Register the Axes selection with the TrackIR Enhanced interface
 	NP_RequestData(DataFields);
-    #define NP_DEVELOPER_ID 20135
-    NP_RegisterProgramProfileID(NP_DEVELOPER_ID);
-    // NP_RegisterProgramProfileID(20135);
+	#define NP_DEVELOPER_ID 20135
+	NP_RegisterProgramProfileID(NP_DEVELOPER_ID);
+	// NP_RegisterProgramProfileID(20135);
 
 
-    // Stop the cursor
+	// Stop the cursor
 	result = NP_StopCursor();
 	if (result == NP_OK)
 		DisplayLine("Cursor stopped");
@@ -115,7 +115,7 @@ void DataCollector::TrackIR_Enhanced_Init() {
 		DisplayLine("NPClient : Error stopping cursor");
 
 
-    // Request that the TrackIR software begins sending Tracking Data
+	// Request that the TrackIR software begins sending Tracking Data
 	result = NP_StartDataTransmission();
 	if (result == NP_OK)
 		DisplayLine("Data transmission started");
@@ -134,16 +134,16 @@ void DataCollector::TrackIR_Enhanced_Init() {
 TRACKIRDATA DataCollector::client_HandleTrackIRData()
 {
 	TRACKIRDATA tid;
-    CString csDataRxMsg;
+	CString csDataRxMsg;
 	CString t_str;
 
-    // Query the TrackIR Enhanced Interface for the latest data
+	// Query the TrackIR Enhanced Interface for the latest data
 	NPRESULT result = NP_GetData( &tid );
 
-    // If the call succeeded, then we have data to process
+	// If the call succeeded, then we have data to process
 	if( NP_OK == result )
 	{
-        // Make sure the remote interface is active
+		// Make sure the remote interface is active
 		if (tid.wNPStatus == NPSTATUS_REMOTEACTIVE)
 		{
 

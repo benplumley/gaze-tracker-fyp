@@ -36,7 +36,7 @@ void control_loop() {
 	char c;
 	while (!ending) {
 		c = getch();
-        if (c==27) { // Escape pressed
+		if (c==27) { // Escape pressed
 			ending = true;
 		}
 	}
@@ -55,8 +55,8 @@ void process_loop() {
 			tid = tid_global;
 		} // tid_mutex is unlocked when it passes out of this scope
 
-        // Compare the last frame signature to the current one if
-        // they are not the same then the data is new
+		// Compare the last frame signature to the current one if
+		// they are not the same then the data is new
 		if (NPFrameSignature != tid.wPFrameSignature) {
 			t_str.Format("[%d] translation cm (%04.02f, %04.02f, %04.02f); rotation deg (%04.02f, %04.02f, %04.02f)",
 						  tid.wPFrameSignature,
@@ -66,7 +66,7 @@ void process_loop() {
 						  tid.fNPPitch / 91.016667f,
 						  tid.fNPYaw / 91.016667f,
 						  tid.fNPRoll / 91.016667f
-					  	);
+						);
 			std::cout << t_str << '\n';
 			NPFrameSignature = tid.wPFrameSignature;
 			NPStaleFrames = 0;
@@ -77,7 +77,7 @@ void process_loop() {
 						  ei_global.left_eye.y,
 						  ei_global.right_eye.x,
 						  ei_global.right_eye.y);
-  		    std::cout << e_str << '\n';
+			std::cout << e_str << '\n';
 		} else {
 			// Either there is no tracking data, the user has paused the
 			// trackIR, or the call happened before the TrackIR was able to
@@ -85,7 +85,7 @@ void process_loop() {
 			if (NPStaleFrames == 30) {
 				std::cout << "No target." << '\n';
 			}
-            NPStaleFrames++;
+			NPStaleFrames++;
 		}
 	}
 }
