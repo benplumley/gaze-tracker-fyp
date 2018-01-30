@@ -1,5 +1,6 @@
 #include "DataCollector.cpp"
 #include "EyeInterface.cpp"
+#include "GazeViewer.cpp"
 #include <chrono>
 #include <thread>
 #include <conio.h>
@@ -90,7 +91,19 @@ void process_loop() {
 	}
 }
 
+// get the homography from headplane to the screen
+// cv::Mat getHomography(TRACKIRDATA headframe) {
+// 	// construct four points in the x-y plane of the head frame
+// 	vector<Point2f> pts_head;
+// 	pts_head.push_back(Point2f(141, 131));
+// 	// construct four points in the x-y plane of the screen frame
+// 	vector<Point2f> pts_screen;
+//
+// 	cv::Mat h = cv::findHomography(pts_head, pts_screen);
+// }
+
 int main(int argc, char const *argv[]) {
+	GazeViewer gv;
 	DataCollector dc;
 	EyeInterface ei;
 	std::thread poll;
