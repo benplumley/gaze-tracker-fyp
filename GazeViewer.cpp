@@ -9,34 +9,36 @@ class GazeViewer {
 };
 
 GazeViewer::GazeViewer() {
-	HINSTANCE hinst;
-	HWND hwndMain;
-
-	// Create the main window.
-
-	hwndMain = CreateWindowEx(
-	    0,                      // no extended styles
-	    "GazeViewer",           // class name
-	    "Main Window",          // window name
-	    WS_OVERLAPPEDWINDOW,	// overlapped window
-	    CW_USEDEFAULT,          // default horizontal position
-	    CW_USEDEFAULT,          // default vertical position
-	    CW_USEDEFAULT,          // default width
-	    CW_USEDEFAULT,          // default height
-	    (HWND) NULL,            // no parent or owner window
-	    (HMENU) NULL,           // class menu used
-	    hinst,             		// instance handle
-	    NULL);                  // no window creation data
-
-	if (!hwndMain)
-	    std::cout << "Failed to create GazeViewer window" << '\n';
+	// HINSTANCE hinst;
+	// HWND hwndMain;
+    //
+	// // Create the main window.
+    //
+	// hwndMain = CreateWindowEx(
+	//     0,                      // no extended styles
+	//     "GazeViewer",           // class name
+	//     "Main Window",          // window name
+	//     WS_OVERLAPPEDWINDOW,	// overlapped window
+	//     CW_USEDEFAULT,          // default horizontal position
+	//     CW_USEDEFAULT,          // default vertical position
+	//     CW_USEDEFAULT,          // default width
+	//     CW_USEDEFAULT,          // default height
+	//     (HWND) NULL,            // no parent or owner window
+	//     (HMENU) NULL,           // class menu used
+	//     hinst,             		// instance handle
+	//     NULL);                  // no window creation data
+    //
+	// if (!hwndMain)
+	//     std::cout << "Failed to create GazeViewer window" << '\n';
 
 	// Show the window using the flag specified by the program
 	// that started the application, and send the application
 	// a WM_PAINT message.
 
-	ShowWindow(hwndMain, SW_SHOWDEFAULT);
-	UpdateWindow(hwndMain);
+	// HWND hWnd = CreateWindowEx(WS_EX_LAYERED|WS_EX_TRANSPARENT, Static, "Main Window", NULL, 0, 0, 640, 480, NULL, 0, GetModuleHandle(NULL), 0);
+
+	// ShowWindow(hWnd, SW_SHOWDEFAULT);
+	// UpdateWindow(hWnd);
 }
 
 void SetSplashImage(HWND hwndSplash, HBITMAP hbmpSplash)

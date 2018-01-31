@@ -1,0 +1,1 @@
+cl windowtest.c user32.lib Gdi32.lib
