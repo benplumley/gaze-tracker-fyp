@@ -1,0 +1,7 @@
+cd build
+cmake ..
+Open Project.sln
+In solution explorer, right click GazeTracker>Properties>C/C++>General>Additional Include Directories set to:
+
+E:\Program Files\opencv\2.4.13.4\build\include\opencv2;E:\Program Files\opencv\2.4.13.4\build\include;E:\Program Files\opencv\2.4.13.4\build\include\opencv;%(AdditionalIncludeDirectories)
+

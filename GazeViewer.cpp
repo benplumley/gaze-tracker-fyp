@@ -1,7 +1,8 @@
-#include "eyelike/objdetect.hpp"
+#include <windows.h>
+#include <winuser.h>
+// #include "eyelike/objdetect.hpp"
 #include "eyelike/highgui.hpp"
 #include "eyelike/imgproc.hpp"
-#include <winuser.h>
 
 class GazeViewer {
 	public:

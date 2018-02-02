@@ -3,35 +3,18 @@
 #include <iostream>
 #include <tchar.h>
 #include <strsafe.h>
+#include "EyeInterface.h"
 
-struct EYE {
-	int x;
-	int y;
-};
 
-// struct EYELIKEDATA {
-// 	int face_width;
-// 	EYE left_eye;
-// 	EYE right_eye;
-// };
 
 std::string message_global;
 HANDLE hSlot;
 LPTSTR Slot = TEXT("\\\\.\\mailslot\\gazetrack_eyelike_mailslot");
 
-class EyeInterface {
-	public:
-		EyeInterface();
-		struct EYELIKEDATA {
-			int face_width;
-			EYE left_eye;
-			EYE right_eye;
-		};
-		EyeInterface::EYELIKEDATA getData();
-};
 
 // create a new type for our remote function
-typedef EyeInterface::EYELIKEDATA (__stdcall *f_eyelikeGetData)();
+// typedef EyeInterface::EYELIKEDATA (__stdcall *f_eyelikeGetData)();
+typedef EYELIKEDATA (__stdcall *f_eyelikeGetData)();
 
 f_eyelikeGetData r_eyelikeGetData; // initialise a global name for the remote function
 
@@ -70,7 +53,8 @@ EyeInterface::EyeInterface(void) {
 }
 
 // read all the messages in the mailslot to get the most recent
-EyeInterface::EYELIKEDATA EyeInterface::getData() {
+// EyeInterface::EYELIKEDATA EyeInterface::getData() {
+EYELIKEDATA EyeInterface::getData() {
 	std::string message = message_global;
 	EYELIKEDATA data;
 	while (ReadSlot() == TRUE) {

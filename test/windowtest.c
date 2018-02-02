@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <SDKDDKVer.h>
 
 const char g_szClassName[] = "myWindowClass";
 

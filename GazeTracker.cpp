@@ -1,7 +1,5 @@
-#include "DataCollector.cpp"
-#include "EyeInterface.cpp"
-#include "GazeViewer.cpp"
-#include "helpers.cpp"
+#define _AFXDLL
+
 #include <chrono>
 #include <thread>
 #include <conio.h>
@@ -9,20 +7,18 @@
 #include <atomic>
 #include <mutex>
 
+#include "GazeTracker.h"
+// #include "GazeViewer.cpp"
+
 std::atomic_bool ending = false;
 std::mutex tid_mutex;
 TRACKIRDATA tid_global;
-EyeInterface::EYELIKEDATA ei_global;
+EYELIKEDATA ei_global;
 
-class GazeTracker {
-	private:
-		void poll_loop();
-		void control_loop();
-};
+
 
 void poll_loop(DataCollector dc, EyeInterface ei) {
 	TRACKIRDATA tid_temp = tid_global;
-	NPRESULT result;
 	while (!ending) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(1)); // loops faster than polling rate, wasting CPU
 		tid_temp = dc.client_HandleTrackIRData();
@@ -37,7 +33,7 @@ void poll_loop(DataCollector dc, EyeInterface ei) {
 void control_loop() {
 	char c;
 	while (!ending) {
-		c = getch();
+		c = _getch();
 		if (c==27) { // Escape pressed
 			ending = true;
 		}
@@ -95,7 +91,7 @@ void process_loop() {
 
 
 int main(int argc, char const *argv[]) {
-	GazeViewer gv;
+	// GazeViewer gv;
 	DataCollector dc;
 	EyeInterface ei;
 	std::thread poll;
