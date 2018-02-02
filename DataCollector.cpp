@@ -1,27 +1,13 @@
 #define _AFXDLL
 
 #include "DataCollector.h"
-// #include "sdk/NPClientWraps.cpp"
-
 #include <iostream>
-
 
 using namespace std;
 
 const LPTSTR dllPath = "C:\\Program Files (x86)\\NaturalPoint\\TrackIR5";
 unsigned long NPFrameSignature;
 unsigned long NPStaleFrames;
-
-// class DataCollector {
-// 	public:
-// 		DataCollector();
-// 		~DataCollector();
-// 		TRACKIRDATA client_HandleTrackIRData();
-// 	private:
-// 		void DisplayLine(CString);
-// 		void TrackIR_Enhanced_Init();
-// 		void TrackIR_Enhanced_Shutdown();
-// };
 
 DataCollector::DataCollector(void) { // default constructor, initialise here
 	TrackIR_Enhanced_Init();

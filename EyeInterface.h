@@ -15,11 +15,6 @@ struct EYELIKEDATA {
 class EyeInterface {
 	public:
 		EyeInterface();
-		// struct EYELIKEDATA {
-		// 	int face_width;
-		// 	EYE left_eye;
-		// 	EYE right_eye;
-		// };
 		EYELIKEDATA getData();
 };
 

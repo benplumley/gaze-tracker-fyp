@@ -2,7 +2,6 @@
 #define GAZETRACKER_H
 
 #include "DataCollector.h"
-// #include "helpers2.h"
 #include "EyeInterface.h"
 class GazeTracker {
 	private:

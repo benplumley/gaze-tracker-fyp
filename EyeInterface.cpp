@@ -5,15 +5,12 @@
 #include <strsafe.h>
 #include "EyeInterface.h"
 
-
-
 std::string message_global;
 HANDLE hSlot;
 LPTSTR Slot = TEXT("\\\\.\\mailslot\\gazetrack_eyelike_mailslot");
 
 
 // create a new type for our remote function
-// typedef EyeInterface::EYELIKEDATA (__stdcall *f_eyelikeGetData)();
 typedef EYELIKEDATA (__stdcall *f_eyelikeGetData)();
 
 f_eyelikeGetData r_eyelikeGetData; // initialise a global name for the remote function
@@ -38,22 +35,9 @@ BOOL WINAPI MakeSlot(LPTSTR lpszSlotName)
 
 EyeInterface::EyeInterface(void) {
 	MakeSlot(Slot);
-	// HINSTANCE eyelikeproc = LoadLibrary("eyelike\\build\\Release\\eyelike.exe");
-	// if (!eyelikeproc) {
-	//     std::cout << "1Couldn't link eyelike.exe. Is it running?" << std::endl;
-	//     return;
-	// }
-	// // get the function from the other exe
-	// r_eyelikeGetData = (f_eyelikeGetData)GetProcAddress(eyelikeproc, "eyelikeGetData");
-	// if (!r_eyelikeGetData) {
-	//     std::cout << "2Couldn't link eyelike.exe. Is it running?" << std::endl; // TODO errors here
-	//     return;
-	// }
-	// std::cout << "eyelike.exe linked successfully." << std::endl;
 }
 
 // read all the messages in the mailslot to get the most recent
-// EyeInterface::EYELIKEDATA EyeInterface::getData() {
 EYELIKEDATA EyeInterface::getData() {
 	std::string message = message_global;
 	EYELIKEDATA data;
@@ -104,14 +88,6 @@ BOOL ReadSlot() {
 
 	while (cMessage != 0)  // retrieve all messages
 	{
-		// Create a message-number string.
-
-		// StringCchPrintf((LPTSTR) achID,
-		//     80,
-		//     TEXT("\nMessage #%d of %d\n"),
-		//     cAllMessages - cMessage + 1,
-		//     cAllMessages);
-
 		// Allocate memory for the message.
 
 		lpszBuffer = (LPTSTR) GlobalAlloc(GPTR,

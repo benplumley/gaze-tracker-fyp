@@ -8,14 +8,11 @@
 #include <mutex>
 
 #include "GazeTracker.h"
-// #include "GazeViewer.cpp"
 
 std::atomic_bool ending = false;
 std::mutex tid_mutex;
 TRACKIRDATA tid_global;
 EYELIKEDATA ei_global;
-
-
 
 void poll_loop(DataCollector dc, EyeInterface ei) {
 	TRACKIRDATA tid_temp = tid_global;

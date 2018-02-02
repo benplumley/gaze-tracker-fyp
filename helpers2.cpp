@@ -1,20 +1,4 @@
 #define _AFXDLL
-
-// #include "eyelike/imgproc.hpp"
-// #include "eyelike/objdetect.hpp"
-// #include "eyelike/highgui.hpp"
-// #include "eyelike/opencv2/core/core.hpp"
-// #include "eyelike/opencv2/features2d/features2d.hpp"
-// #include "eyelike/opencv2/core/affine.hpp"
-// #include "eyelike/opencv2/calib3d/calib3d.hpp"
-
-// #include "eyelike/opencv2/calib3d/calib3d.hpp"
-// #include "sdk/NPClientWraps.h"
-
-// #include "sdk/NPClientWraps.h"
-
-// #include "eyelike/opencv2/opencv.hpp"
-
 #define degrees 91.016667f
 
 #include "helpers2.h"
