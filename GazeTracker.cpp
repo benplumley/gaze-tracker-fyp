@@ -55,12 +55,12 @@ void process_loop() {
 		if (NPFrameSignature != tid.wPFrameSignature) {
 			t_str.Format("[%d] translation cm (%04.02f, %04.02f, %04.02f); rotation deg (%04.02f, %04.02f, %04.02f)",
 						  tid.wPFrameSignature,
-						  tid.fNPX / 204.7875f,
-						  tid.fNPY / 204.7875f,
-						  tid.fNPZ / 204.7875f,
-						  tid.fNPPitch / 91.016667f,
-						  tid.fNPYaw / 91.016667f,
-						  tid.fNPRoll / 91.016667f
+						  tid.fNPX / centimetres,
+						  tid.fNPY / centimetres,
+						  tid.fNPZ / centimetres,
+						  tid.fNPPitch / degrees,
+						  tid.fNPYaw / degrees,
+						  tid.fNPRoll / degrees
 						);
 			std::cout << t_str << '\n';
 			NPFrameSignature = tid.wPFrameSignature;

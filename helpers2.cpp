@@ -1,5 +1,5 @@
 #define _AFXDLL
-#define degrees 91.016667f
+
 
 #include "helpers2.h"
 
