@@ -1,13 +1,27 @@
-#include "eyelike/imgproc.hpp"
-#include "eyelike/opencv2/opencv.hpp"
+#define _AFXDLL
+
+// #include "eyelike/imgproc.hpp"
+// #include "eyelike/objdetect.hpp"
+// #include "eyelike/highgui.hpp"
+// #include "eyelike/opencv2/core/core.hpp"
+// #include "eyelike/opencv2/features2d/features2d.hpp"
+// #include "eyelike/opencv2/core/affine.hpp"
+// #include "eyelike/opencv2/calib3d/calib3d.hpp"
+
+// #include "eyelike/opencv2/calib3d/calib3d.hpp"
+// #include "sdk/NPClientWraps.h"
+
+// #include "sdk/NPClientWraps.h"
+
+// #include "eyelike/opencv2/opencv.hpp"
 
 #define degrees 91.016667f
 
+#include "helpers2.h"
+
 using namespace cv;
 
-Mat getRotationMatrix();
-Mat getTranslationMatrix();
-Mat getHomography();
+
 
 // get the homography from headplane to the screen
 Mat getHomography(TRACKIRDATA headframe) {
@@ -51,9 +65,9 @@ Mat getRotationMatrix(TRACKIRDATA headframe) {
 }
 
 Mat getTranslationMatrix(TRACKIRDATA headframe) {
-	int x = headframe.fNPX;
-	int y = headframe.fNPY;
-	int z = headframe.fNPZ;
+	double x = headframe.fNPX;
+	double y = headframe.fNPY;
+	double z = headframe.fNPZ;
 	// to transform a point (a, b, c), multiply (a, b, c, 1) by T
 	Mat T = (Mat_<int>(4,4) <<
 			 1, 0, 0, x,
