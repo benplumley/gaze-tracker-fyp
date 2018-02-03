@@ -13,6 +13,7 @@ class DataCollector {
 		DataCollector();
 		~DataCollector();
 		TRACKIRDATA client_HandleTrackIRData();
+		void recentre();
 	private:
 		void DisplayLine(CString);
 		void TrackIR_Enhanced_Init();

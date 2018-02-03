@@ -5,8 +5,8 @@
 #define centimetres 204.7875f
 #include "DataCollector.h"
 #include "eyelike/opencv2/calib3d/calib3d.hpp"
-cv::Mat getRotationMatrix();
-cv::Mat getTranslationMatrix();
+cv::Mat getRotationMatrix(TRACKIRDATA headframe);
+cv::Mat getTranslationMatrix(TRACKIRDATA headframe);
 cv::Mat getHomography();
 
 #endif

@@ -15,6 +15,8 @@ typedef EYELIKEDATA (__stdcall *f_eyelikeGetData)();
 
 f_eyelikeGetData r_eyelikeGetData; // initialise a global name for the remote function
 
+EYELIKEDATA origin;
+
 BOOL ReadSlot();
 
 BOOL WINAPI MakeSlot(LPTSTR lpszSlotName)
@@ -45,8 +47,12 @@ EYELIKEDATA EyeInterface::getData() {
 		message = message_global;
 	}
 	const char * c = message.c_str();
-	sscanf(c, "%d %d %d %d %d", &data.face_width, &data.right_eye.x, &data.right_eye.y, &data.left_eye.x, &data.left_eye.y);
+	sscanf_s(c, "%d %d %d %d %d", &data.face_width, &data.right_eye.x, &data.right_eye.y, &data.left_eye.x, &data.left_eye.y);
 	return data;
+}
+
+void EyeInterface::setOrigin() {
+	origin = EyeInterface::getData();
 }
 
 BOOL ReadSlot() {

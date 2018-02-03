@@ -152,3 +152,12 @@ TRACKIRDATA DataCollector::client_HandleTrackIRData()
 
 	return tid;
 }
+
+void DataCollector::recentre() {
+	NPRESULT result = NP_ReCenter();
+	if( NP_OK != result ) {
+		std::cout << "Recentre failed" << '\n';
+	} else {
+		std::cout << "TrackIR recentred" << '\n';
+	}
+}

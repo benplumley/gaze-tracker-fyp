@@ -11,7 +11,7 @@
 #include "GazeTracker.h"
 
 std::atomic_bool ending = false;
-HANDLE next = CreateEvent(NULL, TRUE, FALSE, NULL); // auto-reset, starts unset
+HANDLE next = CreateEvent(NULL, FALSE, FALSE, NULL); // auto-reset, starts unset
 std::mutex tid_mutex;
 TRACKIRDATA tid_global;
 EYELIKEDATA ei_global;
@@ -37,8 +37,7 @@ void control_loop() {
 				ending = true;
 				break;
 			case 13: // Enter pressed
-				std::cout << "Enter pressed" << '\n';
-				SetEvent(next); // auto-reset, starts set
+				SetEvent(next);
 				break;
 		}
 	}
@@ -48,6 +47,7 @@ void process_loop() {
 	TRACKIRDATA tid;
 	CString t_str;
 	CString e_str;
+	cv::Mat T, R;
 	unsigned long NPFrameSignature = 0;
 	unsigned long NPStaleFrames = 0;
 	while (!ending) {
@@ -80,6 +80,8 @@ void process_loop() {
 						  ei_global.right_eye.x,
 						  ei_global.right_eye.y);
 			std::cout << e_str << '\n';
+			R = getRotationMatrix(tid);
+			T = getTranslationMatrix(tid);
 		} else {
 			// Either there is no tracking data, the user has paused the
 			// trackIR, or the call happened before the TrackIR was able to
@@ -92,9 +94,17 @@ void process_loop() {
 	}
 }
 
-void calibrate() {
-	std::cout << "Starting calibration procedure. Press Enter" << '\n';
+void calibrate(DataCollector dc, EyeInterface ei) {
+	std::cout << "Press Enter to begin calibration procedure." << '\n';
 	WaitForSingleObject(next, INFINITE);
+	// gv.draw_point(screen centre);
+	std::cout << "Press Enter while looking at the point in the centre of the screen." << '\n';
+	WaitForSingleObject(next, INFINITE);
+	// centre the TrackIR using its built-in centre function
+	dc.recentre();
+
+	// centre the EyeInterface by saving the current position as the origin
+	ei.setOrigin();
 
 	std::cout << "Calibration complete!" << '\n';
 }
@@ -105,11 +115,11 @@ int main(int argc, char const *argv[]) {
 	// GazeViewer gv;
 	DataCollector dc;
 	EyeInterface ei;
+	calibrate(dc, ei);
 	std::thread poll;
 	poll = std::thread(poll_loop, dc, ei);
 	std::thread process;
 	process = std::thread(process_loop);
-	calibrate();
 	// threads run until Escape pressed
 	poll.join();
 	control.join();

@@ -16,6 +16,7 @@ class EyeInterface {
 	public:
 		EyeInterface();
 		EYELIKEDATA getData();
+		void setOrigin();
 };
 
 #endif
