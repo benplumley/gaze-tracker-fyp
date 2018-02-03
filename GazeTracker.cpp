@@ -11,6 +11,7 @@
 #include "GazeTracker.h"
 
 std::atomic_bool ending = false;
+HANDLE next = CreateEvent(NULL, TRUE, FALSE, NULL); // auto-reset, starts unset
 std::mutex tid_mutex;
 TRACKIRDATA tid_global;
 EYELIKEDATA ei_global;
@@ -30,10 +31,15 @@ void poll_loop(DataCollector dc, EyeInterface ei) {
 
 void control_loop() {
 	char c;
-	while (!ending) {
-		c = _getch();
-		if (c==27) { // Escape pressed
-			ending = true;
+	while (!ending && (c = _getch())) { // until ending or EOF
+		switch (c) {
+			case 27: // Escape pressed
+				ending = true;
+				break;
+			case 13: // Enter pressed
+				std::cout << "Enter pressed" << '\n';
+				SetEvent(next); // auto-reset, starts set
+				break;
 		}
 	}
 }
@@ -86,18 +92,24 @@ void process_loop() {
 	}
 }
 
+void calibrate() {
+	std::cout << "Starting calibration procedure. Press Enter" << '\n';
+	WaitForSingleObject(next, INFINITE);
 
+	std::cout << "Calibration complete!" << '\n';
+}
 
 int main(int argc, char const *argv[]) {
+	std::thread control;
+	control = std::thread(control_loop);
 	// GazeViewer gv;
 	DataCollector dc;
 	EyeInterface ei;
 	std::thread poll;
 	poll = std::thread(poll_loop, dc, ei);
-	std::thread control;
-	control = std::thread(control_loop);
 	std::thread process;
 	process = std::thread(process_loop);
+	calibrate();
 	// threads run until Escape pressed
 	poll.join();
 	control.join();

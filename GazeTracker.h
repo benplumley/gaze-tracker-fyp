@@ -8,6 +8,7 @@ class GazeTracker {
 		void poll_loop(DataCollector dc, EyeInterface ei);
 		void control_loop();
 		void process_loop();
+		void calibrate();
 };
 
 
