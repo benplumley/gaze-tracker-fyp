@@ -47,7 +47,7 @@ void process_loop() {
 	TRACKIRDATA tid;
 	CString t_str;
 	CString e_str;
-	cv::Mat T, R;
+	cv::Mat T, R; // translation and rotation matrices
 	unsigned long NPFrameSignature = 0;
 	unsigned long NPStaleFrames = 0;
 	while (!ending) {
