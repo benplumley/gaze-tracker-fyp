@@ -20,6 +20,7 @@ EYELIKEDATA ei_global;
 cv::Mat calibrate_c2() {
 	cv::Mat H2;
 	// TODO
+	H2 = cv::Mat::eye(2, 2, CV_32F); // TODO temporary, remove later
 	calibrate_c2_done = true;
 	return H2;
 }
@@ -90,6 +91,7 @@ void process_loop(EyeInterface ei) {
 						  ei_global.right_eye.x,
 						  ei_global.right_eye.y);
 			std::cout << e_str << '\n';
+
 			R = getRotationMatrix(tid);
 			T = getTranslationVector(tid);
 
@@ -99,17 +101,18 @@ void process_loop(EyeInterface ei) {
 			unitbefore.push_back(cv::Point2f(0, 1));
 			unitbefore.push_back(cv::Point2f(1, 0));
 			unitbefore.push_back(cv::Point2f(1, 1));
-			cv::vector<cv::Point2f> unitafter;
+			cv::vector<cv::Point3f> unit3f;
 
 			// Multiply these points by the current rotation matrix and add the current translation
-			cv::convertPointsToHomogeneous(unitbefore, unitafter);
-			cv::transform(unitafter, unitafter, R); // rotation
-			for each (cv::Point3f p in unitafter) { // translation
+			cv::convertPointsToHomogeneous(unitbefore, unit3f);
+			cv::transform(unit3f, unit3f, R); // rotation
+			for each (cv::Point3f p in unit3f) { // translation
 				p = p + T;
 			}
 
 			// Make both quads (before and after rotation+translation) homogeneous then discard z
-			cv::convertPointsFromHomogeneous(unitafter, unitafter);
+			cv::vector<cv::Point2f> unitafter;
+			cv::convertPointsFromHomogeneous(unit3f, unitafter);
 
 			// Use the four point pairs to get a homography H1 from the current face plane (after movement) to the face plane at calibration
 			H1 = cv::findHomography(unitafter, unitbefore);
@@ -123,7 +126,10 @@ void process_loop(EyeInterface ei) {
 			ry = (float) ei_global.right_eye.y;
 			eyepos.push_back(cv::Point2f(lx, ly));
 			eyepos.push_back(cv::Point2f(rx, ry));
-			cv::transform(eyepos, eyepos, H1);
+
+			cv::convertPointsToHomogeneous(eyepos, unit3f);
+			cv::transform(unit3f, unit3f, H1);
+			cv::convertPointsFromHomogeneous(unit3f, eyepos);
 			cv::vector<cv::Point2f> eyeOffset = ei.getOffset(eyepos);
 
 			// Start calibration C2 if it's not already been done (ie this is the first loop iteration)
@@ -143,6 +149,7 @@ void process_loop(EyeInterface ei) {
 				p = p - T;
 			}
 			cv::convertPointsFromHomogeneous(screen3f, screenCoords);
+
 			// gv.draw_point(screenCoords[0]);
 			// gv.draw_point(screenCoords[1]);
 		} else {
@@ -178,7 +185,7 @@ int main(int argc, char const *argv[]) {
 	// GazeViewer gv;
 	DataCollector dc;
 	EyeInterface ei;
-	// calibrate(dc, ei);
+	// calibrate(dc, ei); // TODO causes dc to not return updated values
 	std::thread poll;
 	poll = std::thread(poll_loop, dc, ei);
 	std::thread process;

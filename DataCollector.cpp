@@ -127,7 +127,6 @@ TRACKIRDATA DataCollector::client_HandleTrackIRData()
 	TRACKIRDATA tid;
 	CString csDataRxMsg;
 	CString t_str;
-
 	// Query the TrackIR Enhanced Interface for the latest data
 	NPRESULT result = NP_GetData( &tid );
 
