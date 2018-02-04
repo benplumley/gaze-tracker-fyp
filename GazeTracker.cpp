@@ -141,7 +141,7 @@ void process_loop(EyeInterface ei) {
 			cv::vector<cv::Point2f> screenCoords;
 			cv::transform(eyeOffset, screenCoords, H2);
 
-			// Multiply point on the screen by R and add T to account for head movement, then make homogeneous again because this might have moved the point in z
+			// Multiply point on the screen by R and add T to account for head movement, then make homogeneous again because we moved the point in z
 			cv::vector<cv::Point3f> screen3f;
 			cv::convertPointsToHomogeneous(screenCoords, screen3f);
 			cv::transform(screen3f, screen3f, R.inv()); // TODO inverse R here?
@@ -150,6 +150,9 @@ void process_loop(EyeInterface ei) {
 			}
 			cv::convertPointsFromHomogeneous(screen3f, screenCoords);
 
+			CString s_str;
+			s_str.Format("Left (%04.02f, %04.02f) Right (%04.02f, %04.02f)", screenCoords[0].x, screenCoords[0].y, screenCoords[1].x, screenCoords[1].y);
+			std::cout << s_str << '\n';
 			// gv.draw_point(screenCoords[0]);
 			// gv.draw_point(screenCoords[1]);
 		} else {
@@ -164,6 +167,7 @@ void process_loop(EyeInterface ei) {
 	}
 }
 
+// void calibrate(DataCollector dc, EyeInterface ei) {
 void calibrate(DataCollector dc, EyeInterface ei) {
 	std::cout << "Press Enter to begin calibration procedure." << '\n';
 	WaitForSingleObject(next, INFINITE);
@@ -185,7 +189,7 @@ int main(int argc, char const *argv[]) {
 	// GazeViewer gv;
 	DataCollector dc;
 	EyeInterface ei;
-	// calibrate(dc, ei); // TODO causes dc to not return updated values
+	// calibrate(dc, ei); // TODO causes dc to not return updated values because the destructor is called when it passes out of scope
 	std::thread poll;
 	poll = std::thread(poll_loop, dc, ei);
 	std::thread process;
