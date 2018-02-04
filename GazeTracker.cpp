@@ -57,6 +57,7 @@ void process_loop(EyeInterface ei) {
 	CString e_str;
 	cv::Mat R; // rotation matrix
 	cv::Point3f T; // translation vector
+	cv::Mat H1, H2;
 	unsigned long NPFrameSignature = 0;
 	unsigned long NPStaleFrames = 0;
 	while (!ending) {
@@ -111,7 +112,7 @@ void process_loop(EyeInterface ei) {
 			cv::convertPointsFromHomogeneous(unitafter, unitafter);
 
 			// Use the four point pairs to get a homography H1 from the current face plane (after movement) to the face plane at calibration
-			cv::Mat H1 = cv::findHomography(unitafter, unitbefore);
+			H1 = cv::findHomography(unitafter, unitbefore);
 
 			// Multiply current eye position by H1 and compare to eye position at C1 to get eye offset
 			cv::vector<cv::Point2f> eyepos;
@@ -126,7 +127,6 @@ void process_loop(EyeInterface ei) {
 			cv::vector<cv::Point2f> eyeOffset = ei.getOffset(eyepos);
 
 			// Start calibration C2 if it's not already been done (ie this is the first loop iteration)
-			cv::Mat H2;
 			if (!calibrate_c2_done) {
 				H2 = calibrate_c2();
 			}
@@ -178,7 +178,7 @@ int main(int argc, char const *argv[]) {
 	// GazeViewer gv;
 	DataCollector dc;
 	EyeInterface ei;
-	calibrate(dc, ei);
+	// calibrate(dc, ei);
 	std::thread poll;
 	poll = std::thread(poll_loop, dc, ei);
 	std::thread process;
