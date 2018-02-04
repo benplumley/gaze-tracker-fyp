@@ -48,7 +48,7 @@ Mat getRotationMatrix(TRACKIRDATA headframe) {
     return R;
 }
 
-Mat getTranslationMatrix(TRACKIRDATA headframe) {
+Mat getTranslationMatrix3f(TRACKIRDATA headframe) {
 	double x = headframe.fNPX;
 	double y = headframe.fNPY;
 	double z = headframe.fNPZ;
@@ -60,4 +60,50 @@ Mat getTranslationMatrix(TRACKIRDATA headframe) {
 			 0, 0, 0, 1);
 
 	return T;
+}
+
+// Mat getTranslationMatrix2f(TRACKIRDATA headframe) {
+// 	double x = headframe.fNPX;
+// 	double y = headframe.fNPY;
+// 	// to transform a point (a, b, c), multiply (a, b, c, 1) by T
+// 	Mat T = (Mat_<int>(4,4) <<
+// 			 1, 0, 0, x,
+// 			 0, 1, 0, y,
+// 			 0, 0, 1, z,
+// 			 0, 0, 0, 1);
+//
+// 	return T;
+// }
+
+Mat getTranslationMatrixA(TRACKIRDATA headframe) {
+	double x = headframe.fNPX;
+	double y = headframe.fNPY;
+	double z = headframe.fNPZ;
+	// to transform a point (a, b, c), add (a, b, c) to T
+	Mat T = (Mat_<int>(4,3) <<
+			 x, y, z,
+		 	 x, y, z,
+			 x, y, z,
+			 x, y, z);
+
+	return T;
+}
+
+Point3f getTranslationVector(TRACKIRDATA headframe) {
+	double x = headframe.fNPX;
+	double y = headframe.fNPY;
+	double z = headframe.fNPZ;
+	// to transform a point (a, b, c), add (a, b, c) to T
+	Point3f T = Point3f(x, y, z);
+
+	return T;
+}
+
+Mat makeHomogeneous(Mat m, int rowno, int colno) {
+	if (rowno >= 0) {
+		m = m / m.row(rowno);
+	} else if (colno >= 0) {
+		m = m / m.col(colno);
+	}
+	return m;
 }

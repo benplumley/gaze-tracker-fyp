@@ -55,6 +55,15 @@ void EyeInterface::setOrigin() {
 	origin = EyeInterface::getData();
 }
 
+cv::vector<cv::Point2f> EyeInterface::getOffset(cv::vector<cv::Point2f> eyepos) {
+	cv::vector<cv::Point2f> offset;
+	offset.push_back(cv::Point2f(eyepos[0].x - origin.left_eye.x,
+		 						 eyepos[0].y - origin.left_eye.y));
+	offset.push_back(cv::Point2f(eyepos[1].x - origin.right_eye.x,
+		 						 eyepos[1].y - origin.right_eye.y));
+	return offset;
+}
+
 BOOL ReadSlot() {
 	DWORD cbMessage, cMessage, cbRead;
 	BOOL fResult;

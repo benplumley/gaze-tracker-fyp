@@ -9,6 +9,7 @@ class GazeTracker {
 		void control_loop();
 		void process_loop();
 		void calibrate();
+		cv::Mat calibrate_c2();
 };
 
 

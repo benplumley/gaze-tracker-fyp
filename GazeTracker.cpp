@@ -12,9 +12,17 @@
 
 std::atomic_bool ending = false;
 HANDLE next = CreateEvent(NULL, FALSE, FALSE, NULL); // auto-reset, starts unset
+BOOL calibrate_c2_done = false;
 std::mutex tid_mutex;
 TRACKIRDATA tid_global;
 EYELIKEDATA ei_global;
+
+cv::Mat calibrate_c2() {
+	cv::Mat H2;
+	// TODO
+	calibrate_c2_done = true;
+	return H2;
+}
 
 void poll_loop(DataCollector dc, EyeInterface ei) {
 	TRACKIRDATA tid_temp = tid_global;
@@ -43,11 +51,12 @@ void control_loop() {
 	}
 }
 
-void process_loop() {
+void process_loop(EyeInterface ei) {
 	TRACKIRDATA tid;
 	CString t_str;
 	CString e_str;
-	cv::Mat T, R; // translation and rotation matrices
+	cv::Mat R; // rotation matrix
+	cv::Point3f T; // translation vector
 	unsigned long NPFrameSignature = 0;
 	unsigned long NPStaleFrames = 0;
 	while (!ending) {
@@ -81,7 +90,61 @@ void process_loop() {
 						  ei_global.right_eye.y);
 			std::cout << e_str << '\n';
 			R = getRotationMatrix(tid);
-			T = getTranslationMatrix(tid);
+			T = getTranslationVector(tid);
+
+			// Pick four arbitrary points (eg a unit square) in the face plane at calibration
+			cv::vector<cv::Point2f> unitbefore;
+			unitbefore.push_back(cv::Point2f(0, 0));
+			unitbefore.push_back(cv::Point2f(0, 1));
+			unitbefore.push_back(cv::Point2f(1, 0));
+			unitbefore.push_back(cv::Point2f(1, 1));
+			cv::vector<cv::Point2f> unitafter;
+
+			// Multiply these points by the current rotation matrix and add the current translation
+			cv::convertPointsToHomogeneous(unitbefore, unitafter);
+			cv::transform(unitafter, unitafter, R); // rotation
+			for each (cv::Point3f p in unitafter) { // translation
+				p = p + T;
+			}
+
+			// Make both quads (before and after rotation+translation) homogeneous then discard z
+			cv::convertPointsFromHomogeneous(unitafter, unitafter);
+
+			// Use the four point pairs to get a homography H1 from the current face plane (after movement) to the face plane at calibration
+			cv::Mat H1 = cv::findHomography(unitafter, unitbefore);
+
+			// Multiply current eye position by H1 and compare to eye position at C1 to get eye offset
+			cv::vector<cv::Point2f> eyepos;
+			float lx, ly, rx, ry;
+			lx = (float) ei_global.left_eye.x;
+			ly = (float) ei_global.left_eye.y;
+			rx = (float) ei_global.right_eye.x;
+			ry = (float) ei_global.right_eye.y;
+			eyepos.push_back(cv::Point2f(lx, ly));
+			eyepos.push_back(cv::Point2f(rx, ry));
+			cv::transform(eyepos, eyepos, H1);
+			cv::vector<cv::Point2f> eyeOffset = ei.getOffset(eyepos);
+
+			// Start calibration C2 if it's not already been done (ie this is the first loop iteration)
+			cv::Mat H2;
+			if (!calibrate_c2_done) {
+				H2 = calibrate_c2();
+			}
+
+			// Multiply the eye offset by H2 to get a point on the screen
+			cv::vector<cv::Point2f> screenCoords;
+			cv::transform(eyeOffset, screenCoords, H2);
+
+			// Multiply point on the screen by R and add T to account for head movement, then make homogeneous again because this might have moved the point in z
+			cv::vector<cv::Point3f> screen3f;
+			cv::convertPointsToHomogeneous(screenCoords, screen3f);
+			cv::transform(screen3f, screen3f, R.inv()); // TODO inverse R here?
+			for each (cv::Point3f p in screen3f) {
+				p = p - T;
+			}
+			cv::convertPointsFromHomogeneous(screen3f, screenCoords);
+			// gv.draw_point(screenCoords[0]);
+			// gv.draw_point(screenCoords[1]);
 		} else {
 			// Either there is no tracking data, the user has paused the
 			// trackIR, or the call happened before the TrackIR was able to
@@ -119,7 +182,7 @@ int main(int argc, char const *argv[]) {
 	std::thread poll;
 	poll = std::thread(poll_loop, dc, ei);
 	std::thread process;
-	process = std::thread(process_loop);
+	process = std::thread(process_loop, ei);
 	// threads run until Escape pressed
 	poll.join();
 	control.join();
