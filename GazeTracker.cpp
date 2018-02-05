@@ -12,18 +12,28 @@
 
 std::atomic_bool ending = false;
 HANDLE next = CreateEvent(NULL, FALSE, FALSE, NULL); // auto-reset, starts unset
-BOOL calibrate_c2_done = false;
+bool calibrate_done = false;
 std::mutex tid_mutex;
 TRACKIRDATA tid_global;
 EYELIKEDATA ei_global;
+cv::vector<cv::Point2f> eyeOffset_global;
+cv::Mat H2;
 
-cv::Mat calibrate_c2() {
-	cv::Mat H2;
-	// TODO
-	H2 = cv::Mat::eye(2, 2, CV_32F); // TODO temporary, remove later
-	calibrate_c2_done = true;
-	return H2;
-}
+// cv::Mat calibrate_corner(cv::vector<cv::Point2f> eyeOffset) {
+// 	cv::Mat H2;
+// 	std::cout << "Look at the top-left corner of the monitor and press Enter." << '\n';
+// 	WaitForSingleObject(next, INFINITE);
+// 	std::cout << "Look at the top-right corner of the monitor and press Enter." << '\n';
+// 	WaitForSingleObject(next, INFINITE);
+// 	std::cout << "Look at the bottom-left corner of the monitor and press Enter." << '\n';
+// 	WaitForSingleObject(next, INFINITE);
+// 	std::cout << "Look at the bottom-right corner of the monitor and press Enter." << '\n';
+// 	WaitForSingleObject(next, INFINITE);
+// 	// TODO
+// 	H2 = cv::Mat::eye(2, 2, CV_32F); // TODO temporary, remove later
+// 	calibrate_corner_done = true;
+// 	return H2;
+// }
 
 void poll_loop(DataCollector dc, EyeInterface ei) {
 	TRACKIRDATA tid_temp = tid_global;
@@ -47,6 +57,9 @@ void control_loop() {
 				break;
 			case 13: // Enter pressed
 				SetEvent(next);
+				break;
+			case 114: // r pressed
+				// calibrate_corner_done = 0; // trigger recalibration TODO
 				break;
 		}
 	}
@@ -80,7 +93,7 @@ void process_loop(EyeInterface ei) {
 						  tid.fNPYaw / degrees,
 						  tid.fNPRoll / degrees
 						);
-			std::cout << t_str << '\n';
+			// std::cout << t_str << '\n';
 			NPFrameSignature = tid.wPFrameSignature;
 			NPStaleFrames = 0;
 
@@ -90,7 +103,7 @@ void process_loop(EyeInterface ei) {
 						  ei_global.left_eye.y,
 						  ei_global.right_eye.x,
 						  ei_global.right_eye.y);
-			std::cout << e_str << '\n';
+			// std::cout << e_str << '\n';
 
 			R = getRotationMatrix(tid);
 			T = getTranslationVector(tid);
@@ -133,17 +146,38 @@ void process_loop(EyeInterface ei) {
 			cv::vector<cv::Point2f> eyeOffset = ei.getOffset(eyepos);
 
 			// Start calibration C2 if it's not already been done (ie this is the first loop iteration)
-			if (!calibrate_c2_done) {
-				H2 = calibrate_c2();
+			if (!calibrate_done) {
+				eyeOffset_global = eyeOffset; // TODO protect with a mutex
+				continue; // don't try to display position on screen if calibration isn't done
 			}
+
+			// if (calibrate_corner_done < 4) {
+			// 	bool first_pass = true;
+			// 	if (calibrate_corner_done == 0) {
+			// 		// calibrate top left corner
+			// 		if (first_pass) {
+			// 			std::cout << "Look at the top-left corner of the monitor and press Enter." << '\n';
+			// 			WaitForSingleObject(next, INFINITE);
+			// 			continue; // jump back to the start to get the eye position now they're looking in the right spot
+			// 		}
+			// 		first_pass = false;
+			// 		calibrate_corner()
+			// 	}
+			// 	H2 = calibrate_corner(eyeOffset);
+			// }
 
 			// Multiply the eye offset by H2 to get a point on the screen
 			cv::vector<cv::Point2f> screenCoords;
-			cv::transform(eyeOffset, screenCoords, H2);
+			cv::vector<cv::Point3f> screen3f;
+			cv::vector<cv::Point3f> eye3f;
+			cv::convertPointsToHomogeneous(eyeOffset, eye3f);
+			// cv::transform(eyeOffset, screenCoords, H2);
+			std::cout << "debug 1" << '\n';
+			cv::transform(eye3f, screen3f, H2); // TODO errors here, even when H2 is full
 
 			// Multiply point on the screen by R and add T to account for head movement, then make homogeneous again because we moved the point in z
-			cv::vector<cv::Point3f> screen3f;
-			cv::convertPointsToHomogeneous(screenCoords, screen3f);
+			// cv::convertPointsToHomogeneous(screenCoords, screen3f);
+			std::cout << "debug 2" << '\n';
 			cv::transform(screen3f, screen3f, R.inv()); // TODO inverse R here?
 			for each (cv::Point3f p in screen3f) {
 				p = p - T;
@@ -180,7 +214,44 @@ void calibrate(DataCollector dc, EyeInterface ei) {
 	// centre the EyeInterface by saving the current position as the origin
 	ei.setOrigin();
 
+	cv::vector<cv::Point2f> eyeOffset;
+	cv::vector<cv::Point2f> leftEyeOffsets;
+	cv::vector<cv::Point2f> rightEyeOffsets;
+	cv::vector<cv::Point2f> calibrationPoints;
+	calibrationPoints.push_back(cv::Point2f(0,0));
+	calibrationPoints.push_back(cv::Point2f(1920,0));
+	calibrationPoints.push_back(cv::Point2f(0,1080));
+	calibrationPoints.push_back(cv::Point2f(1920,1080)); // TODO read screen size
+	CString instruction;
+	for each (cv::Point2f screenPoint in calibrationPoints) {
+		instruction.Format("Look at %04.0f, %04.0f and press Enter.", screenPoint.x, screenPoint.y);
+		std::cout << instruction << '\n';
+		// gv.draw_point(screenPoint); TODO
+		WaitForSingleObject(next, INFINITE);
+		eyeOffset = eyeOffset_global; // TODO protect with a mutex
+		leftEyeOffsets.push_back(eyeOffset[0]);
+		rightEyeOffsets.push_back(eyeOffset[1]);
+	}
+	H2 = cv::findHomography(leftEyeOffsets, calibrationPoints); // TODO right eye too, separately // TODO test whether H2 actually got filled, retry if not - will crash later otherwise
+	std::cout << "H2 has rows x cols " << H2.rows << " x " << H2.cols << '\n';
+	std::cout << "H2 = "<< '\n' << " "  << H2 << '\n';
+	// std::cout << "Look at the top-left corner of the monitor and press Enter." << '\n';
+	// WaitForSingleObject(next, INFINITE);
+	// eyeOffset = eyeOffset_global; // TODO protect with a mutex
+	// std::cout << "Look at the top-right corner of the monitor and press Enter." << '\n';
+	// WaitForSingleObject(next, INFINITE);
+	// std::cout << "Look at the bottom-left corner of the monitor and press Enter." << '\n';
+	// WaitForSingleObject(next, INFINITE);
+	// std::cout << "Look at the bottom-right corner of the monitor and press Enter." << '\n';
+	// WaitForSingleObject(next, INFINITE);
+	// // TODO
+	// H2 = cv::Mat::eye(2, 2, CV_32F); // TODO temporary, remove later
+	calibrate_done = true;
 	std::cout << "Calibration complete!" << '\n';
+	while (!ending) {
+		// TODO find a better way to wait
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	}
 }
 
 int main(int argc, char const *argv[]) {
@@ -194,7 +265,10 @@ int main(int argc, char const *argv[]) {
 	poll = std::thread(poll_loop, dc, ei);
 	std::thread process;
 	process = std::thread(process_loop, ei);
+	std::thread calibrate_thread;
+	calibrate_thread = std::thread(calibrate, dc, ei);
 	// threads run until Escape pressed
+	calibrate_thread.join();
 	poll.join();
 	control.join();
 	process.join();
