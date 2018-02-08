@@ -143,7 +143,8 @@ void process_loop(EyeInterface ei) {
 			cv::convertPointsToHomogeneous(eyepos, unit3f);
 			cv::transform(unit3f, unit3f, H1);
 			cv::convertPointsFromHomogeneous(unit3f, eyepos);
-			cv::vector<cv::Point2f> eyeOffset = ei.getOffset(eyepos);
+			// cv::vector<cv::Point2f> eyeOffset = ei.getOffset(eyepos);
+			cv::vector<cv::Point2f> eyeOffset = eyepos;
 
 			// Start calibration C2 if it's not already been done (ie this is the first loop iteration)
 			if (!calibrate_done) {
@@ -170,10 +171,32 @@ void process_loop(EyeInterface ei) {
 			cv::vector<cv::Point2f> screenCoords;
 			cv::vector<cv::Point3f> screen3f;
 			cv::vector<cv::Point3f> eye3f;
+			screenCoords.push_back(cv::Point2f(0.0f, 0.0f));
+			screenCoords.push_back(cv::Point2f(0.0f, 0.0f));
+			// cv::Mat screenCoordsMat = new cv::Mat(4,2);
+			// screenCoordsMat = screenCoords;
 			cv::convertPointsToHomogeneous(eyeOffset, eye3f);
 			// cv::transform(eyeOffset, screenCoords, H2);
 			std::cout << "debug 1" << '\n';
-			cv::transform(eye3f, screen3f, H2); // TODO errors here, even when H2 is full
+			std::cout << "eyeOffset = "<< '\n' << " "  << eyeOffset << '\n';
+			std::cout << "screenCoords = "<< '\n' << " "  << screenCoords << '\n';
+			// cv::transform(eye3f, screen3f, H2); // TODO errors here, even when H2 is full
+			// screen3f[0] = eye3f[0] * H2;
+			// screen3f[1] = eye3f[1] * H2;
+			cv::Mat temp = cv::Mat::eye(3, 3, CV_32FC1);
+			H2.convertTo(H2, CV_32F);
+			cv::Mat eye3fMat = cv::Mat(eye3f);
+			cv::Mat screen3fMat;
+			std::cout << "eye3fMat = " << eye3fMat << '\n';
+			eye3fMat.convertTo(eye3fMat, CV_32FC1);
+			eye3fMat.mul(H2);
+			screen3fMat = eye3fMat;
+			screen3f.push_back(cv::Point3f(screen3fMat.at<float>(0,0),
+										   screen3fMat.at<float>(0,1),
+										   screen3fMat.at<float>(0,2)));
+			screen3f.push_back(cv::Point3f(screen3fMat.at<float>(1,0),
+										   screen3fMat.at<float>(1,1),
+										   screen3fMat.at<float>(1,2)));
 
 			// Multiply point on the screen by R and add T to account for head movement, then make homogeneous again because we moved the point in z
 			// cv::convertPointsToHomogeneous(screenCoords, screen3f);
@@ -218,10 +241,16 @@ void calibrate(DataCollector dc, EyeInterface ei) {
 	cv::vector<cv::Point2f> leftEyeOffsets;
 	cv::vector<cv::Point2f> rightEyeOffsets;
 	cv::vector<cv::Point2f> calibrationPoints;
+
 	calibrationPoints.push_back(cv::Point2f(0,0));
 	calibrationPoints.push_back(cv::Point2f(1920,0));
 	calibrationPoints.push_back(cv::Point2f(0,1080));
 	calibrationPoints.push_back(cv::Point2f(1920,1080)); // TODO read screen size
+	// leftEyeOffsets.push_back(cv::Point2f(0,0));
+	// leftEyeOffsets.push_back(cv::Point2f(-100,-100));
+	// leftEyeOffsets.push_back(cv::Point2f(100,-100));
+	// leftEyeOffsets.push_back(cv::Point2f(-100,100));
+	// leftEyeOffsets.push_back(cv::Point2f(100,100));
 	CString instruction;
 	for each (cv::Point2f screenPoint in calibrationPoints) {
 		instruction.Format("Look at %04.0f, %04.0f and press Enter.", screenPoint.x, screenPoint.y);
@@ -230,22 +259,14 @@ void calibrate(DataCollector dc, EyeInterface ei) {
 		WaitForSingleObject(next, INFINITE);
 		eyeOffset = eyeOffset_global; // TODO protect with a mutex
 		leftEyeOffsets.push_back(eyeOffset[0]);
+		std::cout << "left eye offset = "<< '\n' << " "  << eyeOffset[0] << '\n';
 		rightEyeOffsets.push_back(eyeOffset[1]);
 	}
-	H2 = cv::findHomography(leftEyeOffsets, calibrationPoints); // TODO right eye too, separately // TODO test whether H2 actually got filled, retry if not - will crash later otherwise
+	leftEyeOffsets.push_back(cv::Point2f(0,0));
+	calibrationPoints.push_back(cv::Point2f(960,540));
+	H2 = cv::findHomography(leftEyeOffsets, calibrationPoints, CV_RANSAC); // TODO right eye too, separately // TODO test whether H2 actually got filled, retry if not - will crash later otherwise
 	std::cout << "H2 has rows x cols " << H2.rows << " x " << H2.cols << '\n';
 	std::cout << "H2 = "<< '\n' << " "  << H2 << '\n';
-	// std::cout << "Look at the top-left corner of the monitor and press Enter." << '\n';
-	// WaitForSingleObject(next, INFINITE);
-	// eyeOffset = eyeOffset_global; // TODO protect with a mutex
-	// std::cout << "Look at the top-right corner of the monitor and press Enter." << '\n';
-	// WaitForSingleObject(next, INFINITE);
-	// std::cout << "Look at the bottom-left corner of the monitor and press Enter." << '\n';
-	// WaitForSingleObject(next, INFINITE);
-	// std::cout << "Look at the bottom-right corner of the monitor and press Enter." << '\n';
-	// WaitForSingleObject(next, INFINITE);
-	// // TODO
-	// H2 = cv::Mat::eye(2, 2, CV_32F); // TODO temporary, remove later
 	calibrate_done = true;
 	std::cout << "Calibration complete!" << '\n';
 	while (!ending) {

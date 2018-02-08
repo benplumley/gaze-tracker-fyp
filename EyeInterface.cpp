@@ -53,14 +53,20 @@ EYELIKEDATA EyeInterface::getData() {
 
 void EyeInterface::setOrigin() {
 	origin = EyeInterface::getData();
+	std::cout << "Origin left: " << origin.left_eye.x << " " << origin.left_eye.y << '\n';
 }
 
 cv::vector<cv::Point2f> EyeInterface::getOffset(cv::vector<cv::Point2f> eyepos) {
 	cv::vector<cv::Point2f> offset;
-	offset.push_back(cv::Point2f(eyepos[0].x - origin.left_eye.x,
-		 						 eyepos[0].y - origin.left_eye.y));
-	offset.push_back(cv::Point2f(eyepos[1].x - origin.right_eye.x,
-		 						 eyepos[1].y - origin.right_eye.y));
+	std::cout << "getOffset. eyepos[0].x = " << eyepos[0].x << '\n';
+	offset.push_back(cv::Point2f(origin.left_eye.x - eyepos[0].x,
+		 						 origin.left_eye.y - eyepos[0].y));
+	offset.push_back(cv::Point2f(origin.right_eye.x - eyepos[1].x,
+		 						 origin.right_eye.y - eyepos[1].y));
+	// offset.push_back(cv::Point2f(eyepos[0].x - origin.left_eye.x,
+	// 	 						 eyepos[0].y - origin.left_eye.y));
+	// offset.push_back(cv::Point2f(eyepos[1].x - origin.right_eye.x,
+	// 	 						 eyepos[1].y - origin.right_eye.y));
 	return offset;
 }
 
