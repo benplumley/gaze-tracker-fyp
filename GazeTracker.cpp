@@ -17,10 +17,10 @@ std::mutex tid_mutex;
 TRACKIRDATA tid_global;
 EYELIKEDATA ei_global;
 cv::vector<cv::Point2f> eyeOffset_global;
-cv::Mat H2;
+cv::Mat H2l, H2r;
 
 // cv::Mat calibrate_corner(cv::vector<cv::Point2f> eyeOffset) {
-// 	cv::Mat H2;
+// 	cv::Mat H2l;
 // 	std::cout << "Look at the top-left corner of the monitor and press Enter." << '\n';
 // 	WaitForSingleObject(next, INFINITE);
 // 	std::cout << "Look at the top-right corner of the monitor and press Enter." << '\n';
@@ -30,9 +30,9 @@ cv::Mat H2;
 // 	std::cout << "Look at the bottom-right corner of the monitor and press Enter." << '\n';
 // 	WaitForSingleObject(next, INFINITE);
 // 	// TODO
-// 	H2 = cv::Mat::eye(2, 2, CV_32F); // TODO temporary, remove later
+// 	H2l = cv::Mat::eye(2, 2, CV_32F); // TODO temporary, remove later
 // 	calibrate_corner_done = true;
-// 	return H2;
+// 	return H2l;
 // }
 
 void poll_loop(DataCollector dc, EyeInterface ei) {
@@ -71,7 +71,7 @@ void process_loop(EyeInterface ei) {
 	CString e_str;
 	cv::Mat R; // rotation matrix
 	cv::Point3f T; // translation vector
-	cv::Mat H1, H2;
+	cv::Mat H1, H2l;
 	unsigned long NPFrameSignature = 0;
 	unsigned long NPStaleFrames = 0;
 	while (!ending) {
@@ -164,10 +164,10 @@ void process_loop(EyeInterface ei) {
 			// 		first_pass = false;
 			// 		calibrate_corner()
 			// 	}
-			// 	H2 = calibrate_corner(eyeOffset);
+			// 	H2l = calibrate_corner(eyeOffset);
 			// }
 
-			// Multiply the eye offset by H2 to get a point on the screen
+			// Multiply the eye offset by H2l to get a point on the screen
 			cv::vector<cv::Point2f> screenCoords;
 			cv::vector<cv::Point3f> screen3f;
 			cv::vector<cv::Point3f> eye3f;
@@ -176,20 +176,21 @@ void process_loop(EyeInterface ei) {
 			// cv::Mat screenCoordsMat = new cv::Mat(4,2);
 			// screenCoordsMat = screenCoords;
 			cv::convertPointsToHomogeneous(eyeOffset, eye3f);
-			// cv::transform(eyeOffset, screenCoords, H2);
+			// cv::transform(eyeOffset, screenCoords, H2l);
 			std::cout << "debug 1" << '\n';
 			std::cout << "eyeOffset = "<< '\n' << " "  << eyeOffset << '\n';
 			std::cout << "screenCoords = "<< '\n' << " "  << screenCoords << '\n';
-			// cv::transform(eye3f, screen3f, H2); // TODO errors here, even when H2 is full
-			// screen3f[0] = eye3f[0] * H2;
-			// screen3f[1] = eye3f[1] * H2;
-			cv::Mat temp = cv::Mat::eye(3, 3, CV_32FC1);
-			H2.convertTo(H2, CV_32F);
+			// cv::transform(eye3f, screen3f, H2l); // TODO errors here, even when H2l is full
+			// screen3f[0] = eye3f[0] * H2l;
+			// screen3f[1] = eye3f[1] * H2l;
 			cv::Mat eye3fMat = cv::Mat(eye3f);
 			cv::Mat screen3fMat;
 			std::cout << "eye3fMat = " << eye3fMat << '\n';
+
+			H2l.convertTo(H2l, CV_32F);
 			eye3fMat.convertTo(eye3fMat, CV_32FC1);
-			eye3fMat.mul(H2);
+
+			eye3fMat.mul(H2l);
 			screen3fMat = eye3fMat;
 			screen3f.push_back(cv::Point3f(screen3fMat.at<float>(0,0),
 										   screen3fMat.at<float>(0,1),
@@ -262,11 +263,12 @@ void calibrate(DataCollector dc, EyeInterface ei) {
 		std::cout << "left eye offset = "<< '\n' << " "  << eyeOffset[0] << '\n';
 		rightEyeOffsets.push_back(eyeOffset[1]);
 	}
-	leftEyeOffsets.push_back(cv::Point2f(0,0));
-	calibrationPoints.push_back(cv::Point2f(960,540));
-	H2 = cv::findHomography(leftEyeOffsets, calibrationPoints, CV_RANSAC); // TODO right eye too, separately // TODO test whether H2 actually got filled, retry if not - will crash later otherwise
-	std::cout << "H2 has rows x cols " << H2.rows << " x " << H2.cols << '\n';
-	std::cout << "H2 = "<< '\n' << " "  << H2 << '\n';
+	// leftEyeOffsets.push_back(cv::Point2f(0,0));
+	// calibrationPoints.push_back(cv::Point2f(960,540));
+	H2l = cv::findHomography(leftEyeOffsets, calibrationPoints, CV_RANSAC); // TODO test whether H2l actually got filled, retry if not - will crash later otherwise
+	H2r = cv::findHomography(rightEyeOffsets, calibrationPoints, CV_RANSAC); // TODO test whether H2r actually got filled, retry if not - will crash later otherwise
+	std::cout << "H2l has rows x cols " << H2l.rows << " x " << H2l.cols << '\n';
+	std::cout << "H2l = "<< '\n' << " "  << H2l << '\n';
 	calibrate_done = true;
 	std::cout << "Calibration complete!" << '\n';
 	while (!ending) {
