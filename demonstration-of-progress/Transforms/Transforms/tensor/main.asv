@@ -1,0 +1,30 @@
+clear all;
+close all;
+drawnow;
+
+% http://en.wikipedia.org/wiki/Tensor#Early_history
+% http://en.wikipedia.org/wiki/Tensor_(intrinsic_definition)
+
+% Tensors are mathematical (geometric) objects that include scalars,
+% vectors, matrices, as well as cubes of numbers, and hyper-cubes of numbers.
+% Tensors are used to describe physical situations such as the stress forces
+% acting at a point. 
+
+% More formally, suppose V is vector space that has as field f(V);
+% a field can be scalar, vector, or matrix valued; or some other tensor.
+% That is, a point in a tensor field index a tensor.
+
+% scalars are zeroth order tensors, or are 'one dimensional'; (x)
+% vectors are first order tensors, 1D [x,y,z] or [x;y;z].
+%    vectors order a tuple of scalars
+% matrices are second order tensors or 2D, (m_11,m_12;m_21,m_22]
+%    matrices order a tuple of vectors
+% 'cubices' are third order
+
+
+n = 3; % dimension of vector space
+N = 3; % order of tensor
+T = rand( N,N,N ); % a tensor
+
+% An NxNxN tensor is more than an array of matrices.
+% Each 

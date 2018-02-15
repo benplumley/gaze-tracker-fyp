@@ -243,10 +243,10 @@ void calibrate(DataCollector dc, EyeInterface ei) {
 	cv::vector<cv::Point2f> rightEyeOffsets;
 	cv::vector<cv::Point2f> calibrationPoints;
 
-	calibrationPoints.push_back(cv::Point2f(0,0));
-	calibrationPoints.push_back(cv::Point2f(1920,0));
-	calibrationPoints.push_back(cv::Point2f(0,1080));
-	calibrationPoints.push_back(cv::Point2f(1920,1080)); // TODO read screen size
+	calibrationPoints.push_back(cv::Point2f(0.0f,0.0f));
+	calibrationPoints.push_back(cv::Point2f(1920.0f,0.0f));
+	calibrationPoints.push_back(cv::Point2f(0.0f,1080.0f));
+	calibrationPoints.push_back(cv::Point2f(1920.0f,1080.0f)); // TODO read screen size
 	// leftEyeOffsets.push_back(cv::Point2f(0,0));
 	// leftEyeOffsets.push_back(cv::Point2f(-100,-100));
 	// leftEyeOffsets.push_back(cv::Point2f(100,-100));
