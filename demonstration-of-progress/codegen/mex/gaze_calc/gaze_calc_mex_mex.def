@@ -1,0 +1,8 @@
+LIBRARY gaze_calc_mex.mexw64
+EXPORTS
+mexFunction
+emlrtMexFcnProperties
+gaze_calc
+gaze_calc_initialize
+gaze_calc_terminate
+gaze_calc_atexit

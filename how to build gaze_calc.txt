@@ -1,0 +1,7 @@
+Open gaze_calc.m in Matlab
+Open Apps>Matlab Coder
+Follow steps up to error building MEX
+Open gaze_calc_mex.bat and the .mki and .mk files, replace "Program Files" with "PROGRAMFILES" in all
+Run the .bat
+In Coder, click the arrows in the top left to open the steps, and click on Generate to skip the MEX step
+Generate as C with auto-detection of compiler

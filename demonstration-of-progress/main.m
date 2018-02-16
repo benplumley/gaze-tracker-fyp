@@ -1,7 +1,7 @@
 clear variables;
 close all;
 
-rand_factor = 0;
+rand_factor =0;
 face_rotation_rand = 0.01 * rand_factor;
 face_translation_rand = 0.1 * rand_factor;
 screen_rotation_rand = 0.01 * rand_factor;
@@ -11,8 +11,10 @@ screen_translation_rand = 0.1 * rand_factor;
 world = eye(3);
 
 %%
-eyep = [1;5]+randn(2,1); % eye position is measured in 2D
-eyep(3,:) = 1; % assign any depth value, we'll calculate it later
+%eyep = [1;5;1]+randn(3,1); % eye position is measured in 2D
+eyep = 2*randn(2,1);
+%eyep = [3;3];
+%eyep(3,:) = 3; % assign any depth value, we'll calculate it later
 
 %%
 face = [ 0 0 0;
@@ -20,7 +22,6 @@ face = [ 0 0 0;
          1 1 0;
          0 1 0 ]'; % a plane
 R = RotA( [1;0;0]+face_rotation_rand*randn(3,1), 0.5*pi + face_rotation_rand*pi*rand,1  ); % rotation of face in world
-R
 T = [1;5;1]+face_translation_rand*randn(3,1); % translation of face in world
 M = R;
 M(1:3,4) = T; % combined rotation and translation
@@ -42,11 +43,11 @@ gaze = U(:,3); % gaze is the so-called 'null' vector - out of the plane
 % for points IN face-space the projection onto the face plane is assumed to
 % be orthogonal
 P = [1 0 0;0 1 0];
-P = [0 1 0;0 0 1];
+%P = [0 1 0;0 0 1];
 
 %% calculate eye depth based on known coordinates and face plane
 x = x ./ norm(x); % turn x into a unit vector
-eyep = eyep - (dot(x, (eyep - midface))) * x; % move eyep into the face plane
+%eyep = eyep - (dot(x, (eyep - midface))) * x; % move eyep into the face plane
 
 %% screen is treated like the face
 screen = [ 0 0 0;
@@ -56,7 +57,6 @@ screen = [ 0 0 0;
 screen(3,:) = 0;
 
 R2 = RotA( [1;0;0]+screen_rotation_rand*randn(3,1), 1.5*pi + screen_rotation_rand*pi*rand,1  ); % rotation of face in world
-R2
 T2 = [1;1;2]+screen_translation_rand*randn(3,1); % translation of face in world
 M2 = R2;
 M2(1:3,4) = T2; % combined rotation and translation
@@ -102,21 +102,22 @@ xwrld(4,:) = 1; % need homogeneous coordinates for it to work !
 %xfce = P*U'*(xwrld - repmat(midface,1,numpoints)) % map into face coordinates, could be one matrix !
 %xfce = M*(xwrld - repmat(midface,1,numpoints)); % map into face coordinates, could be one matrix !
 %xfce = (M*xwrld) - repmat(midface,1,numpoints); % map into face coordinates, could be one matrix !
-xfce = (M*xwrld) + repmat(midface,1,numpoints)
+M
+xfce = (M*xwrld) + repmat(midface,1,numpoints);
 %xfce = M*(xwrld + repmat(midface,1,numpoints));
 
 %xwrld(1:2,:)
 %xwrld(3,:)
 
-xfce = bsxfun(@rdivide, xfce(1:3,:), xfce(4,:)) % make face coords nonhomogeneous again
-xscr = bsxfun(@rdivide, xscr(1:3,:), xscr(4,:)) % make face coords nonhomogeneous again
+xfce = bsxfun(@rdivide, xfce(1:3,:), xfce(4,:)); % make face coords nonhomogeneous again
+xscr = bsxfun(@rdivide, xscr(1:3,:), xscr(4,:)); % make face coords nonhomogeneous again
 midface = midface(1:3,:);
 mscr = mscr(1:3,:);
 
 
 for i = 1:numpoints
     xfce(:,i) = xfce(:,i) - (dot(x, (xfce(:,i) - midface))) * x; % move them into the face plane
-    xscr(:,i) = xscr(:,i) - (dot(x, (xscr(:,i) - mscr))) * x; % move them into the screen plane
+    xscr(:,i) = xscr(:,i) - (dot(x2, (xscr(:,i) - mscr))) * x2; % move them into the screen plane
 end
     
 %xfce = xfce - (dot(x, (xfce - repmat(midface,1,numpoints)))) * x; % move them into the face plane
@@ -127,18 +128,24 @@ end
 
 %xscr(3,:) = 1
 %xfce(3,:) = 1
-H = homography_est( xscr, xfce )
+%H = homography_est( xscr, xfce )
+%xfce = xfce([1,3],:)
+%xscr = xscr([1,3],:)
+H = homography_solve( xfce([1,3],:), xscr([1,3],:) )
 
-z = H*xscr;
-z_nh = bsxfun(@rdivide, z(1:2,:), z(3,:));
-d = z_nh - xfce(1:2,:);
-max(abs(d(:)))
+% z = H*xscr;
+% z_nh = bsxfun(@rdivide, z(1:2,:), z(3,:));
+% d = z_nh - xfce(1:2,:);
+% max(abs(d(:)));
 
 %%
-screenp = H*eyep;
-x2 = x2 ./ norm(x2); % turn x into a unit vector
-screenp = bsxfun(@rdivide, screenp(1:3,:), screenp(3,:))
-screenp = screenp - (dot(x2, (screenp - mscr))) * x2 % move eyep into the screen plane
+
+eyep(3,:) = 1;
+screenp = H*eyep
+eyep = eyep(1:2,:);
+%x2 = x2 ./ norm(x2); % turn x into a unit vector
+screenp = bsxfun(@rdivide, screenp(1:2,:), screenp(3,:))
+%screenp = screenp - (dot(x2, (screenp - mscr))) * x2 % move eyep into the screen plane
 
 %%
 
@@ -163,8 +170,7 @@ quiver3( mscr(1),mscr(2),mscr(3), U2(1,1),U2(2,1),U2(3,1),'r' );
 quiver3( mscr(1),mscr(2),mscr(3), U2(1,2),U2(2,2),U2(3,2),'r--' );
 quiver3( mscr(1),mscr(2),mscr(3), nscr(1),nscr(2),nscr(3),'r--' );
 
-%plot3(eyep(1),eyep(2),eyep(3),'k.');
-%plot3(screenp(1),screenp(2),screenp(3),'r.');
+
 
 
 %xscr([1,2,3],:) = xscr([1,3,2],:) TODO use RotA instead?
@@ -175,7 +181,7 @@ quiver3( mscr(1),mscr(2),mscr(3), nscr(1),nscr(2),nscr(3),'r--' );
 %xfce([1,2,3],:) = xfce([1,3,2],:)
 plot3( xscr(1,:), xscr(2,:), xscr(3,:), 'g*' );
 plot3( xfce(1,:), xfce(2,:), xfce(3,:), 'go' );
-plot3( xwrld(1,:), xwrld(2,:), xwrld(3,:), 'b*' );
+%plot3( xwrld(1,:), xwrld(2,:), xwrld(3,:), 'b*' );
 
 x3 = U(:,1)*xfce(1,:) + U(:,2)*xfce(2,:);
 %x = U(:,1)*xfce(1,:) + U(:,2)*xfce(2,:) + eye;
@@ -189,5 +195,15 @@ for i = 1:size(xwrld,2)
 end
 
 view( U(:,1) );
-
 axis equal off
+
+figure
+hold on;
+axis equal
+axis([-10 10 -10 10]);
+
+plot(0, 0, 'k+');
+plot(eyep(1),eyep(2),'k.');
+plot(screenp(1),screenp(2),'r.');
+
+
