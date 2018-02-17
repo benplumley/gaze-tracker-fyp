@@ -9,7 +9,7 @@
 #include <mutex>
 
 #include "GazeTracker.h"
-#include "gaze-calc/main.h"
+#include "gaze_calc/main.h"
 
 std::atomic_bool ending = false;
 HANDLE next = CreateEvent(NULL, FALSE, FALSE, NULL); // auto-reset, starts unset
