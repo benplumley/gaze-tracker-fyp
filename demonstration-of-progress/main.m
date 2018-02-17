@@ -1,7 +1,7 @@
 clear variables;
 close all;
 
-rand_factor =0;
+rand_factor =2;
 face_rotation_rand = 0.01 * rand_factor;
 face_translation_rand = 0.1 * rand_factor;
 screen_rotation_rand = 0.01 * rand_factor;
@@ -14,7 +14,7 @@ world = eye(3);
 %eyep = [1;5;1]+randn(3,1); % eye position is measured in 2D
 eyep = 2*randn(2,1);
 %eyep = [3;3];
-%eyep(3,:) = 3; % assign any depth value, we'll calculate it later
+eyep(3,:) = 3; % assign any depth value, we'll calculate it later
 
 %%
 face = [ 0 0 0;
@@ -47,7 +47,7 @@ P = [1 0 0;0 1 0];
 
 %% calculate eye depth based on known coordinates and face plane
 x = x ./ norm(x); % turn x into a unit vector
-%eyep = eyep - (dot(x, (eyep - midface))) * x; % move eyep into the face plane
+eyep = eyep - (dot(x, (eyep - midface))) * x; % move eyep into the face plane
 
 %% screen is treated like the face
 screen = [ 0 0 0;
@@ -114,7 +114,7 @@ xscr = bsxfun(@rdivide, xscr(1:3,:), xscr(4,:)); % make face coords nonhomogeneo
 midface = midface(1:3,:);
 mscr = mscr(1:3,:);
 
-
+x2 = x2 ./ norm(x2);
 for i = 1:numpoints
     xfce(:,i) = xfce(:,i) - (dot(x, (xfce(:,i) - midface))) * x; % move them into the face plane
     xscr(:,i) = xscr(:,i) - (dot(x2, (xscr(:,i) - mscr))) * x2; % move them into the screen plane
@@ -144,8 +144,8 @@ eyep(3,:) = 1;
 screenp = H*eyep
 eyep = eyep(1:2,:);
 %x2 = x2 ./ norm(x2); % turn x into a unit vector
-screenp = bsxfun(@rdivide, screenp(1:2,:), screenp(3,:))
-%screenp = screenp - (dot(x2, (screenp - mscr))) * x2 % move eyep into the screen plane
+%screenp = bsxfun(@rdivide, screenp(1:2,:), screenp(3,:))
+screenp = screenp - (dot(x2, (screenp - mscr))) * x2 % move eyep into the screen plane
 
 %%
 

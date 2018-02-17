@@ -462,7 +462,7 @@ void CNPTestDlg::TrackIR_Enhanced_Init()
     // assigned by NaturalPoint!
 
     // Your assigned developer ID needs to be inserted below!
-    #define NP_DEVELOPER_ID 20135
+    #define NP_DEVELOPER_ID 20137
 
     // NOTE : The title of your project must show up
     // in the list of supported titles shown in the Profiles

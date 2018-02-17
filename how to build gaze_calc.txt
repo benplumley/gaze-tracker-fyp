@@ -5,3 +5,5 @@ Open gaze_calc_mex.bat and the .mki and .mk files, replace "Program Files" with 
 Run the .bat
 In Coder, click the arrows in the top left to open the steps, and click on Generate to skip the MEX step
 Generate as C with auto-detection of compiler
+
+When copying to the gazetracker project, add all .c and .h files to the project in visual studio
