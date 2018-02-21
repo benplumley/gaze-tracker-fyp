@@ -137,7 +137,8 @@ void process_loop(EyeInterface ei) {
 					  right_eye_x,
 					  right_eye_y,
 				  	  retmat);
-					  std::cout << "debug 4.1" << '\n';
+
+			std::cout << "debug 4.1" << '\n';
 			cv::vector<cv::Point2f> screenCoords;
 			screenCoords.push_back(cv::Point2f(retmat[0], retmat[1]));
 			screenCoords.push_back(cv::Point2f(retmat[2], retmat[3]));

@@ -16,6 +16,7 @@
 #include "repmat.h"
 #include "mean.h"
 #include "cross.h"
+#include <stdio.h>
 
 /* Function Definitions */
 
@@ -38,25 +39,33 @@ void gaze_calc(double head_x, double head_y, double head_z, double head_roll,
                left_eye_y, double right_eye_x, double right_eye_y, double
                retmat[4])
 {
+	printf("Debug gc1");
   double face[16];
   int ia;
   static const signed char iv0[16] = { 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1,
     0, 0 };
 
-  double dv0[9];
+  /*double dv0[9];
   double dv1[9];
+  double dv2[9];
+  double dv3[9];*/ // ORIGINAL VALUE
+  double dv0[16];
+  double dv1[16];
+  double dv2[16];
+  double dv3[16];
   static const signed char iv1[3] = { 1, 0, 0 };
 
   static const signed char iv2[3] = { 0, 1, 0 };
 
-  double dv2[9];
-  double dv3[9];
+
   int ak;
   static const signed char iv3[3] = { 0, 0, 1 };
 
   int br;
-  double R_data[9];
-  double face_data[12];
+  // double R_data[9]; // ORIGINAL VALUE
+  double R_data[16];
+  //double face_data[12]; // ORIGINAL VALUE
+  double face_data[16];
   int ic;
   int ar;
   int k;
@@ -68,7 +77,8 @@ void gaze_calc(double head_x, double head_y, double head_z, double head_roll,
   double scale;
   double absxk;
   double t;
-  signed char M2_data[9];
+  signed char M2_data[16];
+  // signed char M2_data[9]; // ORIGINAL VALUE
   static const signed char R2[9] = { 1, 0, 0, 0, 1, 0, 0, 0, 1 };
 
   double mscr[3];
@@ -92,7 +102,7 @@ void gaze_calc(double head_x, double head_y, double head_z, double head_roll,
   double c_b;
   double dv4[2];
   double dv5[2];
-
+  printf("Debug gc2");
   /* % */
   /* % */
   for (ia = 0; ia < 16; ia++) {
@@ -147,7 +157,7 @@ void gaze_calc(double head_x, double head_y, double head_z, double head_roll,
 
     dv3[2 + 3 * ia] = iv3[ia];
   }
-
+  printf("Debug gc3");
   for (ia = 0; ia < 3; ia++) {
     for (ak = 0; ak < 3; ak++) {
       dv0[ia + 3 * ak] = 0.0;
@@ -183,7 +193,7 @@ void gaze_calc(double head_x, double head_y, double head_z, double head_roll,
       face_data[ic] = 0.0;
     }
   }
-
+  printf("Debug gc4");
   br = 0;
   for (ak = 0; ak <= 9; ak += 3) {
     ar = -1;
@@ -201,7 +211,7 @@ void gaze_calc(double head_x, double head_y, double head_z, double head_roll,
 
     br += 3;
   }
-
+  printf("Debug gc5");
   /*  do the transform */
   /*  pick out the new face coordinates */
   mean(*(double (*)[12])&face_data[0], midface);
@@ -241,33 +251,33 @@ void gaze_calc(double head_x, double head_y, double head_z, double head_roll,
   for (ia = 0; ia < 3; ia++) {
     x[ia] /= y;
   }
-
+  printf("Debug gc6");
   /*  turn x into a unit vector */
   /* eyep = eyep - (dot(x, (eyep - midface))) * x; % move eyep into the face plane */
   /* % screen is treated like the face */
   for (ia = 0; ia < 16; ia++) {
     face[ia] = iv0[ia];
   }
-
+  printf("Debug gc6.1");
   for (ia = 0; ia < 4; ia++) {
     face[2 + (ia << 2)] = 0.0;
   }
-
+  printf("Debug gc6.2");
   /* R2 = RotA( [1;0;0]+screen_rotation_rand*randn(3,1), 1.5*pi + screen_rotation_rand*pi*rand,1  ); % rotation of face in world */
   /* T2 = [1;1;2]+screen_translation_rand*randn(3,1); % translation of face in world */
   for (ia = 0; ia < 9; ia++) {
     M2_data[ia] = R2[ia];
   }
-
+  printf("Debug gc6.3");
   for (ia = 0; ia < 3; ia++) {
     M2_data[ia + 9] = 0;
   }
-
+  printf("Debug gc6.4");
   /*  combined rotation and translation */
   for (ia = 0; ia < 4; ia++) {
     face[3 + (ia << 2)] = 1.0;
   }
-
+  printf("Debug gc6.5");
   /*  need homogeneous coordinates for it to work ! */
   memset(&face_data[0], 0, 12U * sizeof(double));
   for (ak = 0; ak <= 9; ak += 3) {
@@ -275,7 +285,7 @@ void gaze_calc(double head_x, double head_y, double head_z, double head_roll,
       face_data[ic] = 0.0;
     }
   }
-
+  printf("Debug gc7");
   br = 0;
   for (ak = 0; ak <= 9; ak += 3) {
     ar = -1;
@@ -315,7 +325,7 @@ void gaze_calc(double head_x, double head_y, double head_z, double head_roll,
   for (ia = 0; ia < 12; ia++) {
     xscr[ia] = iv4[ia];
   }
-
+  printf("Debug gc8");
   /* xscr = randn(3,numpoints); % a point on the screen */
   for (ia = 0; ia < 4; ia++) {
     xscr[1 + 3 * ia] = 1.0;
@@ -349,7 +359,7 @@ void gaze_calc(double head_x, double head_y, double head_z, double head_roll,
       b_b[ak + (ia << 2)] = (double)b_xscr[ak + (ia << 2)] - face[ak + (ia << 2)];
     }
   }
-
+  printf("Debug gc9");
   memset(&face_data[0], 0, 12U * sizeof(double));
   for (ak = 0; ak <= 9; ak += 3) {
     for (ic = ak; ic + 1 <= ak + 3; ic++) {
@@ -392,7 +402,7 @@ void gaze_calc(double head_x, double head_y, double head_z, double head_roll,
       C_data[ic] = 0.0;
     }
   }
-
+  printf("Debug gc10");
   br = 0;
   for (ak = 0; ak <= 9; ak += 3) {
     ar = -1;
@@ -475,7 +485,7 @@ void gaze_calc(double head_x, double head_y, double head_z, double head_roll,
       c_xscr[ia + (ak << 1)] = xscr[(ia << 1) + 3 * ak];
     }
   }
-
+  printf("Debug gc11");
   homography_solve(b_xfce, c_xscr, H);
 
   /*  z = H*xscr; */
@@ -507,6 +517,7 @@ void gaze_calc(double head_x, double head_y, double head_z, double head_roll,
     retmat[ia << 1] = dv4[ia];
     retmat[1 + (ia << 1)] = dv5[ia];
   }
+  printf("Debug gc12");
 }
 
 /*
