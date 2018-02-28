@@ -25,6 +25,7 @@ TRACKIRDATA tid_global;
 EYELIKEDATA ei_global;
 cv::vector<cv::Point2f> eyeOffset_global;
 cv::Mat H2l, H2r;
+cv::Point2f eyeOffsetVector, eyeScale;
 
 // cv::Mat calibrate_corner(cv::vector<cv::Point2f> eyeOffset) {
 // 	cv::Mat H2l;
@@ -91,7 +92,6 @@ void process_loop(EyeInterface ei) {
 		// Compare the last frame signature to the current one if
 		// they are not the same then the data is new
 		if (NPFrameSignature != tid.wPFrameSignature) {
-			std::cout << "debug 1" << '\n';
 			t_str.Format("[%d] translation cm (%04.02f, %04.02f, %04.02f); rotation deg (%04.02f, %04.02f, %04.02f)",
 						  tid.wPFrameSignature,
 						  tid.fNPX / centimetres,
@@ -101,20 +101,19 @@ void process_loop(EyeInterface ei) {
 						  tid.fNPYaw / degrees,
 						  tid.fNPRoll / degrees
 						);
-			std::cout << t_str << '\n';
+			// std::cout << t_str << '\n';
 			NPFrameSignature = tid.wPFrameSignature;
 			NPStaleFrames = 0;
-			std::cout << "debug 2" << '\n';
 			e_str.Format("width %d; left (%d, %d); right (%d, %d)",
 						  ei_global.face_width,
 						  ei_global.left_eye.x,
 						  ei_global.left_eye.y,
 						  ei_global.right_eye.x,
 						  ei_global.right_eye.y);
-			std::cout << e_str << '\n';
-			std::cout << "debug 3" << '\n';
+			// std::cout << e_str << '\n';
 			int x = 5;
 			double retmat[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+			double retmat2[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 			double head_x = tid.fNPX / centimetres;
 			double head_y = tid.fNPY / centimetres;
 			double head_z = tid.fNPZ / centimetres;
@@ -125,7 +124,23 @@ void process_loop(EyeInterface ei) {
 			double left_eye_y = ei_global.left_eye.y;
 			double right_eye_x = ei_global.right_eye.x;
 			double right_eye_y = ei_global.right_eye.y;
-			std::cout << "debug 4" << '\n';
+
+			// gaze_calc(head_x,
+			// 		  head_y,
+			// 		  head_z,
+			// 		  head_roll,
+			// 		  head_pitch,
+			// 		  head_yaw,
+			// 		  right_eye_x,
+			// 		  right_eye_y,
+			// 		  0,
+			// 		  0,
+			// 	  	  retmat2);
+			//
+			cv::vector<cv::Point2f> screenCoords;
+			//
+			// screenCoords.push_back(cv::Point2f(retmat2[0], retmat2[1]));
+			cv::vector<cv::Point2f> eyeOffset;
 			gaze_calc(head_x,
 					  head_y,
 					  head_z,
@@ -137,16 +152,28 @@ void process_loop(EyeInterface ei) {
 					  right_eye_x,
 					  right_eye_y,
 				  	  retmat);
+			eyeOffset.push_back(cv::Point2f(retmat[0], retmat[1]));
+			eyeOffset.push_back(cv::Point2f(retmat[2], retmat[3]));
 
-			std::cout << "debug 4.1" << '\n';
-			cv::vector<cv::Point2f> screenCoords;
-			screenCoords.push_back(cv::Point2f(retmat[0], retmat[1]));
-			screenCoords.push_back(cv::Point2f(retmat[2], retmat[3]));
+			if (!calibrate_done) {
+				eyeOffset_global = eyeOffset; // TODO protect with a mutex
+				continue; // don't try to display position on screen if calibration isn't done
+			}
+
+			cv::Point2f leftscreen = cv::Point2f(eyeScale.x * (eyeOffset.at(0).x - eyeOffsetVector.x),
+												 eyeScale.y * (eyeOffset.at(0).y - eyeOffsetVector.y));
+			screenCoords.push_back(eyeOffset.at(0));
+			screenCoords.push_back(cv::Point2f(0.0f, 0.0f));
+
+
+			// cv::transform(eyeOffset, screenCoords, H2l);
+			// screenCoords = H2l * eyeOffset_global;
+			// std::cout << '\n\n' << screenCoords << '\n';
+			// screenCoords.push_back(cv::Point2f(retmat[2], retmat[3]));
 			// screenCoords[0].x = retmat[0];
 			// screenCoords[0].y = retmat[1];
 			// screenCoords[1].x = retmat[2];
 			// screenCoords[1].y = retmat[3];
-			std::cout << "debug 5" << '\n';
 
 
 			// R = getRotationMatrix(tid);
@@ -254,7 +281,6 @@ void process_loop(EyeInterface ei) {
 			CString s_str;
 			s_str.Format("Left (%04.02f, %04.02f) Right (%04.02f, %04.02f)", screenCoords[0].x, screenCoords[0].y, screenCoords[1].x, screenCoords[1].y);
 			std::cout << s_str << '\n';
-			std::cout << "debug 6" << '\n';
 			// gv.draw_point(screenCoords[0]);
 			// gv.draw_point(screenCoords[1]);
 		} else {
@@ -282,10 +308,18 @@ void calibrate(DataCollector dc, EyeInterface ei) {
 	// centre the EyeInterface by saving the current position as the origin
 	ei.setOrigin();
 
-	cv::vector<cv::Point2f> eyeOffset;
+	std::vector<cv::Point2f> eyeOffset;
 	cv::vector<cv::Point2f> leftEyeOffsets;
 	cv::vector<cv::Point2f> rightEyeOffsets;
 	cv::vector<cv::Point2f> calibrationPoints;
+
+
+	cv::vector<cv::Point2f> x;
+	cv::vector<cv::Point2f> y;
+	cv::vector<cv::Point2f> z;
+	y.push_back(cv::Point2f(0.0f,0.0f));
+	z = y;
+	x.push_back(z[0]);
 
 	calibrationPoints.push_back(cv::Point2f(0.0f,0.0f));
 	calibrationPoints.push_back(cv::Point2f(1920.0f,0.0f));
@@ -303,16 +337,28 @@ void calibrate(DataCollector dc, EyeInterface ei) {
 		// gv.draw_point(screenPoint); TODO
 		WaitForSingleObject(next, INFINITE);
 		eyeOffset = eyeOffset_global; // TODO protect with a mutex
+		// leftEyeOffsets.push_back(eyeOffset.at(0));
 		leftEyeOffsets.push_back(eyeOffset[0]);
 		std::cout << "left eye offset = "<< '\n' << " "  << eyeOffset[0] << '\n';
 		rightEyeOffsets.push_back(eyeOffset[1]);
 	}
 	// leftEyeOffsets.push_back(cv::Point2f(0,0));
 	// calibrationPoints.push_back(cv::Point2f(960,540));
-	H2l = cv::findHomography(leftEyeOffsets, calibrationPoints, CV_RANSAC); // TODO test whether H2l actually got filled, retry if not - will crash later otherwise
-	H2r = cv::findHomography(rightEyeOffsets, calibrationPoints, CV_RANSAC); // TODO test whether H2r actually got filled, retry if not - will crash later otherwise
-	std::cout << "H2l has rows x cols " << H2l.rows << " x " << H2l.cols << '\n';
-	std::cout << "H2l = "<< '\n' << " "  << H2l << '\n';
+	double leftleftarray[4];
+	double lefttoparray[4];
+	for (int i = 0; i < 4; i++) {
+		leftleftarray[i] = leftEyeOffsets.at(i).x;
+		lefttoparray[i] = leftEyeOffsets.at(i).y;
+	}
+
+	eyeOffsetVector = cv::Point2f(*std::min_element(std::begin(leftleftarray), std::end(leftleftarray)), *std::min_element(std::begin(lefttoparray), std::end(lefttoparray)));
+
+	eyeScale = cv::Point2f(1920.0f / *std::max_element(std::begin(leftleftarray), std::end(leftleftarray)) - *std::min_element(std::begin(leftleftarray), std::end(leftleftarray)),
+						   1080.0f / *std::max_element(std::begin(lefttoparray), std::end(lefttoparray)) - *std::min_element(std::begin(lefttoparray), std::end(lefttoparray)));
+	// H2l = cv::findHomography(leftEyeOffsets, calibrationPoints, CV_RANSAC); // TODO test whether H2l actually got filled, retry if not - will crash later otherwise
+	// // H2r = cv::findHomography(rightEyeOffsets, calibrationPoints, CV_RANSAC); // TODO test whether H2r actually got filled, retry if not - will crash later otherwise
+	// std::cout << "H2l has rows x cols " << H2l.rows << " x " << H2l.cols << '\n';
+	// std::cout << "H2l = "<< '\n' << " "  << H2l << '\n';
 	calibrate_done = true;
 	std::cout << "Calibration complete!" << '\n';
 	while (!ending) {
@@ -333,10 +379,10 @@ int main(int argc, char const *argv[]) {
 	poll = std::thread(poll_loop, dc, ei);
 	std::thread process;
 	process = std::thread(process_loop, ei);
-	// std::thread calibrate_thread;
-	// calibrate_thread = std::thread(calibrate, dc, ei);
+	std::thread calibrate_thread;
+	calibrate_thread = std::thread(calibrate, dc, ei);
 	// threads run until Escape pressed
-	// calibrate_thread.join();
+	calibrate_thread.join();
 	poll.join();
 	control.join();
 	process.join();
