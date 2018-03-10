@@ -82,6 +82,11 @@ void process_loop(EyeInterface ei) {
 	cv::Mat H1, H2l;
 	unsigned long NPFrameSignature = 0;
 	unsigned long NPStaleFrames = 0;
+	double distance = 1.0f;
+	const int windowsize = 50;
+	int windowposition = 0;
+	int window[windowsize];
+	int sum = 0;
 	while (!ending) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(1)); // loops faster than polling rate, wasting CPU
 		{
@@ -117,11 +122,11 @@ void process_loop(EyeInterface ei) {
 			double head_x = tid.fNPX / centimetres;
 			double head_y = tid.fNPY / centimetres;
 			double head_z = tid.fNPZ / centimetres;
-			double head_roll = tid.fNPRoll / degrees;
-			double head_pitch = tid.fNPPitch / degrees;
-			double head_yaw = tid.fNPYaw / degrees;
-			double left_eye_x = ei_global.left_eye.x;
-			double left_eye_y = ei_global.left_eye.y;
+			double head_roll = (tid.fNPRoll / degrees) / distance;
+			double head_pitch = (tid.fNPPitch / degrees) / distance;
+			double head_yaw = (tid.fNPYaw / degrees) / distance;
+			double left_eye_x = (ei_global.left_eye.x) / 100.0f;
+			double left_eye_y = (ei_global.left_eye.y) / 100.0f;
 			double right_eye_x = ei_global.right_eye.x;
 			double right_eye_y = ei_global.right_eye.y;
 
@@ -149,11 +154,21 @@ void process_loop(EyeInterface ei) {
 					  head_yaw,
 					  left_eye_x,
 					  left_eye_y,
-					  right_eye_x,
-					  right_eye_y,
+					  0*right_eye_x,
+					  0*right_eye_y,
+					  100.0f,
 				  	  retmat);
-			eyeOffset.push_back(cv::Point2f(retmat[0], retmat[1]));
-			eyeOffset.push_back(cv::Point2f(retmat[2], retmat[3]));
+
+			// std::cout << "retmat: " << retmat[0] << " " << retmat[1] << " " << retmat[2] << " " << retmat[3] << '\n';
+			eyeOffset.push_back(cv::Point2f((float) retmat[0], (float) retmat[1]));
+			eyeOffset.push_back(cv::Point2f((float) retmat[2], (float) retmat[3]));
+
+			window[windowposition] = (int) round(retmat[0] * 100);
+			windowposition = (windowposition + 1) % windowsize;
+			sum = 0;
+			for (auto n : window) sum += n;
+
+			std::cout << sum / windowsize << '\n';
 
 			if (!calibrate_done) {
 				eyeOffset_global = eyeOffset; // TODO protect with a mutex
@@ -162,7 +177,8 @@ void process_loop(EyeInterface ei) {
 
 			cv::Point2f leftscreen = cv::Point2f(eyeScale.x * (eyeOffset.at(0).x - eyeOffsetVector.x),
 												 eyeScale.y * (eyeOffset.at(0).y - eyeOffsetVector.y));
-			screenCoords.push_back(eyeOffset.at(0));
+			screenCoords.push_back(leftscreen);
+			// screenCoords.push_back(eyeOffset.at(0));
 			screenCoords.push_back(cv::Point2f(0.0f, 0.0f));
 
 
@@ -351,10 +367,10 @@ void calibrate(DataCollector dc, EyeInterface ei) {
 		lefttoparray[i] = leftEyeOffsets.at(i).y;
 	}
 
-	eyeOffsetVector = cv::Point2f(*std::min_element(std::begin(leftleftarray), std::end(leftleftarray)), *std::min_element(std::begin(lefttoparray), std::end(lefttoparray)));
+	eyeOffsetVector = cv::Point2f((float) *std::min_element(std::begin(leftleftarray), std::end(leftleftarray)), (float) *std::min_element(std::begin(lefttoparray), std::end(lefttoparray)));
 
-	eyeScale = cv::Point2f(1920.0f / *std::max_element(std::begin(leftleftarray), std::end(leftleftarray)) - *std::min_element(std::begin(leftleftarray), std::end(leftleftarray)),
-						   1080.0f / *std::max_element(std::begin(lefttoparray), std::end(lefttoparray)) - *std::min_element(std::begin(lefttoparray), std::end(lefttoparray)));
+	eyeScale = cv::Point2f((float) (1920.0f / *std::max_element(std::begin(leftleftarray), std::end(leftleftarray)) - *std::min_element(std::begin(leftleftarray), std::end(leftleftarray))),
+						   (float) (1080.0f / *std::max_element(std::begin(lefttoparray), std::end(lefttoparray)) - *std::min_element(std::begin(lefttoparray), std::end(lefttoparray))));
 	// H2l = cv::findHomography(leftEyeOffsets, calibrationPoints, CV_RANSAC); // TODO test whether H2l actually got filled, retry if not - will crash later otherwise
 	// // H2r = cv::findHomography(rightEyeOffsets, calibrationPoints, CV_RANSAC); // TODO test whether H2r actually got filled, retry if not - will crash later otherwise
 	// std::cout << "H2l has rows x cols " << H2l.rows << " x " << H2l.cols << '\n';

@@ -66,7 +66,7 @@ static void main_gaze_calc(void)
   /* Call the entry-point 'gaze_calc'. */
   gaze_calc(argInit_real_T(), argInit_real_T(), argInit_real_T(), argInit_real_T
             (), argInit_real_T(), argInit_real_T(), argInit_real_T(),
-            argInit_real_T(), argInit_real_T(), argInit_real_T(), retmat);
+            argInit_real_T(), argInit_real_T(), argInit_real_T(), argInit_real_T(), retmat);
 }
 
 /*

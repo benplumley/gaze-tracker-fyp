@@ -24,7 +24,7 @@
 extern void gaze_calc(double head_x, double head_y, double head_z, double
                       head_roll, double head_pitch, double head_yaw, double
                       left_eye_x, double left_eye_y, double right_eye_x, double
-                      right_eye_y, double retmat[4]);
+                      right_eye_y, double starting_distance, double retmat[4]);
 
 #endif
 

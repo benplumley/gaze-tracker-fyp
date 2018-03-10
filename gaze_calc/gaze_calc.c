@@ -37,7 +37,7 @@
 void gaze_calc(double head_x, double head_y, double head_z, double head_roll,
                double head_pitch, double head_yaw, double left_eye_x, double
                left_eye_y, double right_eye_x, double right_eye_y, double
-               retmat[4])
+               starting_distance, double retmat[4])
 {
 	// printf("Debug gc1");
   double face[16];
@@ -179,7 +179,7 @@ void gaze_calc(double head_x, double head_y, double head_z, double head_roll,
   /* T = [1;5;1]+face_translation_rand*randn(3,1); % translation of face in world */
   R_data[9] = head_x;
   R_data[10] = head_y;
-  R_data[11] = head_z;
+  R_data[11] = starting_distance + head_z;
 
   /*  combined rotation and translation */
   for (ia = 0; ia < 4; ia++) {
